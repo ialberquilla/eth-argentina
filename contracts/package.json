@@ -1,8 +1,0 @@
-{
-  "name": "contracts",
-  "version": "1.0.0",
-  "type": "module",
-  "devDependencies": {
-    "hardhat": "^3.0.15"
-  }
-}

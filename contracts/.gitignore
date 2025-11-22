@@ -1,20 +1,18 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development (and goerli) broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/*/5/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+
 # Node modules
-/node_modules
-
-# Compilation output
-/dist
-
-# pnpm deploy output
-/bundle
-
-# Hardhat Build Artifacts
-/artifacts
-
-# Hardhat compilation (v2) support directory
-/cache
-
-# Typechain output
-/types
-
-# Hardhat coverage reports
-/coverage
+node_modules/
