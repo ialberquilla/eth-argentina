@@ -12,6 +12,7 @@ via_ir = false
 # RPC endpoints for forking
 [rpc_endpoints]
 base = "${BASE_RPC_URL}"
+baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 # Fork testing configuration
 [fork]

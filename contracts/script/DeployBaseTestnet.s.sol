@@ -12,21 +12,21 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {SwapDepositor} from "../src/SwapDepositor.sol";
 import {AdapterRegistry} from "../src/AdapterRegistry.sol";
 import {AaveAdapter} from "../src/adapters/AaveAdapter.sol";
+import {HookDeployer} from "../src/HookDeployer.sol";
 
 /// @notice Comprehensive deployment script for Base Sepolia testnet
 /// @dev Deploys all required contracts: AdapterRegistry, AaveAdapters, and SwapDepositor Hook
 contract DeployBaseTestnetScript is Script {
     // Base Sepolia addresses
-    address constant POOL_MANAGER = 0x7Da1D65F8B249183667cdE74C5cbd46dD38AA829;
+    address constant POOL_MANAGER = 0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829;
     address constant AAVE_POOL = 0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951;
-    address constant CREATE2_FACTORY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
     // Token addresses on Base Sepolia
-    address constant USDC = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
-    address constant USDbC = 0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA; // USD Base Coin
+    address constant USDC = 0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f;
+    address constant USDT = 0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a;
 
-    // ENS domain for adapters
-    string constant ADAPTER_DOMAIN = "adapters.eth";
+    // ENS domain for adapters (using base.eth for Base network)
+    string constant ADAPTER_DOMAIN = "base.eth";
 
     function run() public {
         // Verify we're on Base Sepolia
@@ -58,16 +58,21 @@ contract DeployBaseTestnetScript is Script {
         AaveAdapter usdcAdapter = new AaveAdapter(AAVE_POOL, "USDC");
         console2.log("   USDC AaveAdapter deployed at:", address(usdcAdapter));
 
-        // Deploy USDbC Adapter
-        console2.log("   Deploying AaveAdapter for USDbC...");
-        AaveAdapter usdBcAdapter = new AaveAdapter(AAVE_POOL, "USDbC");
-        console2.log("   USDbC AaveAdapter deployed at:", address(usdBcAdapter));
+        // Deploy USDT Adapter
+        console2.log("   Deploying AaveAdapter for USDT...");
+        AaveAdapter usdtAdapter = new AaveAdapter(AAVE_POOL, "USDT");
+        console2.log("   USDT AaveAdapter deployed at:", address(usdtAdapter));
         console2.log("");
 
         // ============================================
-        // 3. Deploy SwapDepositor Hook with CREATE2
+        // 3. Deploy HookDeployer and SwapDepositor Hook
         // ============================================
-        console2.log("3. Deploying SwapDepositor Hook...");
+        console2.log("3. Deploying Hook infrastructure...");
+
+        // Deploy the HookDeployer contract
+        console2.log("   Deploying HookDeployer...");
+        HookDeployer hookDeployer = new HookDeployer();
+        console2.log("   HookDeployer deployed at:", address(hookDeployer));
 
         // Hook contracts must have specific flags encoded in the address
         uint160 flags = uint160(
@@ -85,8 +90,9 @@ contract DeployBaseTestnetScript is Script {
             adapterRegistry
         );
 
+        // Use the HookDeployer address as the CREATE2 factory
         (address hookAddress, bytes32 salt) = HookMiner.find(
-            CREATE2_FACTORY,
+            address(hookDeployer),
             flags,
             type(SwapDepositor).creationCode,
             constructorArgs
@@ -95,18 +101,21 @@ contract DeployBaseTestnetScript is Script {
         console2.log("   Mined salt:", vm.toString(salt));
         console2.log("   Expected hook address:", hookAddress);
 
-        // Deploy the hook using CREATE2
-        SwapDepositor swapDepositor = new SwapDepositor{salt: salt}(
+        // Deploy the hook using the HookDeployer
+        SwapDepositor swapDepositor = hookDeployer.deploy(
+            salt,
             IPoolManager(POOL_MANAGER),
             adapterRegistry
         );
 
+        console2.log("   SwapDepositor Hook deployed at:", address(swapDepositor));
+
+        // Verify the address matches
         require(
             address(swapDepositor) == hookAddress,
             "DeployBaseTestnet: Hook address mismatch"
         );
-
-        console2.log("   SwapDepositor Hook deployed at:", address(swapDepositor));
+        console2.log("   Hook address matches expected address!");
         console2.log("");
 
         // ============================================
@@ -118,9 +127,9 @@ contract DeployBaseTestnetScript is Script {
         adapterRegistry.registerAdapter(address(usdcAdapter), ADAPTER_DOMAIN);
         console2.log("   USDC adapter registered");
 
-        console2.log("   Registering USDbC adapter...");
-        adapterRegistry.registerAdapter(address(usdBcAdapter), ADAPTER_DOMAIN);
-        console2.log("   USDbC adapter registered");
+        console2.log("   Registering USDT adapter...");
+        adapterRegistry.registerAdapter(address(usdtAdapter), ADAPTER_DOMAIN);
+        console2.log("   USDT adapter registered");
         console2.log("");
 
         vm.stopBroadcast();
@@ -141,7 +150,7 @@ contract DeployBaseTestnetScript is Script {
         console2.log("");
         console2.log("--- Aave Adapters ---");
         console2.log("USDC Adapter:", address(usdcAdapter));
-        console2.log("USDbC Adapter:", address(usdBcAdapter));
+        console2.log("USDT Adapter:", address(usdtAdapter));
         console2.log("");
         console2.log("--- External Dependencies ---");
         console2.log("Pool Manager:", POOL_MANAGER);
@@ -154,7 +163,8 @@ contract DeployBaseTestnetScript is Script {
         console2.log("");
         console2.log("--- Adapter ENS Names ---");
         console2.log("Adapters can be resolved using their ENS names:");
-        console2.log("Format: SYMBOL:BASE_SEPOLIA:random-words.adapters.eth");
+        console2.log("Format: SYMBOL:BASE_SEPOLIA:word-word.base.eth");
+        console2.log("Example: USDC:BASE_SEPOLIA:swift-fox.base.eth");
         console2.log("(Exact names are generated dynamically based on adapter address)");
         console2.log("========================================");
     }

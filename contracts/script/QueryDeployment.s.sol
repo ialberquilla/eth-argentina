@@ -21,7 +21,7 @@ contract QueryDeploymentScript is Script {
     address constant USDbC_ADAPTER = address(0);    // TODO: Update with deployed address
     address constant SWAP_DEPOSITOR = address(0);   // TODO: Update with deployed address
 
-    string constant ADAPTER_DOMAIN = "adapters.eth";
+    string constant ADAPTER_DOMAIN = "base.eth";
 
     function run() public view {
         console2.log("========================================");

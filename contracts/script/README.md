@@ -153,7 +153,7 @@ AaveAdapter daiAdapter = new AaveAdapter(AAVE_POOL, "DAI");
 
 2. Register it:
 ```solidity
-adapterRegistry.registerAdapter(address(daiAdapter), "adapters.eth");
+adapterRegistry.registerAdapter(address(daiAdapter), "base.eth");
 ```
 
 ## Verification

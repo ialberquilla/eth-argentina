@@ -135,12 +135,12 @@ forge script script/03_Swap.s.sol:SwapScript \
 Each adapter is registered with an ENS-style name following this format:
 
 ```
-SYMBOL:BLOCKCHAIN:WORD-WORD.adapters.eth
+SYMBOL:BLOCKCHAIN:WORD-WORD.base.eth
 ```
 
 Example:
-- `USDC:BASE_SEPOLIA:swift-fox.adapters.eth`
-- `USDbC:BASE_SEPOLIA:brave-wolf.adapters.eth`
+- `USDC:BASE_SEPOLIA:swift-fox.base.eth`
+- `USDbC:BASE_SEPOLIA:brave-wolf.base.eth`
 
 The "WORD-WORD" portion is deterministically generated from the adapter's address, making each name unique and human-readable.
 

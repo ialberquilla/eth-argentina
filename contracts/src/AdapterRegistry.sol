@@ -21,7 +21,7 @@ contract AdapterRegistry is IAdapterRegistry {
 
     /// @notice Registers a lending adapter with ENS
     /// @param adapter The adapter contract to register
-    /// @param domain The ENS domain to use (e.g., "adapters.eth")
+    /// @param domain The ENS domain to use (e.g., "base.eth")
     function registerAdapter(address adapter, string calldata domain) external override {
         require(adapter != address(0), "Invalid adapter address");
         require(bytes(domain).length > 0, "Invalid domain");
@@ -43,7 +43,7 @@ contract AdapterRegistry is IAdapterRegistry {
     }
 
     /// @notice Resolves an adapter ENS name to its contract address
-    /// @param adapterEnsName The full ENS name (e.g., "USDC:BASE:swift-fox.adapters.eth")
+    /// @param adapterEnsName The full ENS name (e.g., "USDC:BASE:swift-fox.base.eth")
     /// @return The adapter contract address
     function resolveAdapter(string calldata adapterEnsName) external view override returns (address) {
         bytes32 node = adapterEnsName.namehash();
