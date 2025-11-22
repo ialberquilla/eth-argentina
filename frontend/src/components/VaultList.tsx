@@ -30,12 +30,12 @@ const mockVaults: Vault[] = [
     timeSinceLaunch: "0 days",
     smartContractRiskScore: 92,
     avatarColor: "bg-blue-600",
-    // Deployed contract addresses on Base Sepolia
-    tokenAddress: "0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a",
-    adapterAddress: "0x6F0b25e2abca0b60109549b7823392e3312f505c",
-    poolManagerAddress: "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829",
-    hookAddress: "0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4",
-    aavePoolAddress: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
+    // Deployed contract addresses on Base Sepolia (all lowercase for compatibility)
+    tokenAddress: "0x0a215d8ba66387dca84b284d18c3b4ec3de6e54a", // USDT
+    adapterAddress: "0x6f0b25e2abca0b60109549b7823392e3312f505c", // USDT Adapter
+    poolManagerAddress: "0x7da1d65f8b249183667cde74c5cbd46dd38aa829",
+    hookAddress: "0x1d16eade6be2d9037f458d53d0b0fd216fc740c4",
+    aavePoolAddress: "0x6ae43d3271ff6888e7fc43fd7321a503ff738951",
     ensName: "usdt-basesepolia-swift-fox.onetx.base.eth", // ENS name for adapter lookup
   },
   {
