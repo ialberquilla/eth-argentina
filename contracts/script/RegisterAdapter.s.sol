@@ -27,12 +27,12 @@ contract RegisterAdapterScript is Script {
         // Generate the standardized adapter ID
         string memory adapterId = AdapterIdGenerator.generateAdapterId(metadata);
         console2.log("Adapter ID:", adapterId);
-        // Output: "USDC:BASE:0xa238dd80"
+        // Output example: "USDC:BASE:swift-fox" (word pair is deterministic)
 
         // Generate full ENS name
         string memory ensName = AdapterIdGenerator.generateAdapterIdWithDomain(metadata, "adapters.eth");
         console2.log("ENS Name:", ensName);
-        // Output: "USDC:BASE:0xa238dd80.adapters.eth"
+        // Output example: "USDC:BASE:swift-fox.adapters.eth"
 
         // Generate ENS namehash for registration
         bytes32 ensNode = AdapterIdGenerator.generateENSNode(metadata, "adapters.eth");
@@ -81,7 +81,11 @@ contract RegisterAdapterScript is Script {
         console2.log("4. Register the namehash in your ENS registry");
         console2.log("5. Set the resolver to point to your adapter contract address");
         console2.log("\nThis ensures all adapters follow a consistent naming convention:");
-        console2.log("SYMBOL:BLOCKCHAIN:ADDRESS_HASH.domain");
-        console2.log("Example: USDC:BASE:0xa238dd80.adapters.eth");
+        console2.log("SYMBOL:BLOCKCHAIN:WORD-WORD.domain");
+        console2.log("Example: USDC:BASE:swift-fox.adapters.eth");
+        console2.log("\nThe word pairs are:");
+        console2.log("- Deterministic (same address = same words)");
+        console2.log("- Human-friendly (easy to remember and communicate)");
+        console2.log("- Unique (4,096 combinations from 64 adjectives x 64 nouns)");
     }
 }

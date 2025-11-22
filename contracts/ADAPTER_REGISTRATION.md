@@ -11,30 +11,30 @@ The `AdapterIdGenerator` library provides a consistent way to generate unique, h
 All adapter IDs follow this standardized format:
 
 ```
-SYMBOL:BLOCKCHAIN:ADDRESS_HASH
+SYMBOL:BLOCKCHAIN:WORD-WORD
 ```
 
 ### Components
 
 1. **SYMBOL**: The token symbol the adapter is configured for (e.g., `USDC`, `DAI`, `WETH`)
 2. **BLOCKCHAIN**: The human-readable name of the blockchain (e.g., `BASE`, `ETHEREUM`, `ARBITRUM`)
-3. **ADDRESS_HASH**: A shortened, human-friendly hash of the protocol contract address (first 10 characters including `0x`)
+3. **WORD-WORD**: A memorable two-word identifier derived from the protocol contract address (e.g., `swift-fox`, `bright-eagle`)
 
 ### Examples
 
-- `USDC:BASE:0xa238dd80` - USDC adapter on Base
-- `DAI:ETHEREUM:0x87870bca` - DAI adapter on Ethereum mainnet
-- `WETH:ARBITRUM:0x794a6135` - WETH adapter on Arbitrum
+- `USDC:BASE:swift-fox` - USDC adapter on Base
+- `DAI:ETHEREUM:golden-wolf` - DAI adapter on Ethereum mainnet
+- `WETH:ARBITRUM:royal-hawk` - WETH adapter on Arbitrum
 
 ## ENS Integration
 
 For ENS registration, the adapter ID is combined with a domain suffix:
 
 ```
-SYMBOL:BLOCKCHAIN:ADDRESS_HASH.domain
+SYMBOL:BLOCKCHAIN:WORD-WORD.domain
 ```
 
-Example: `USDC:BASE:0xa238dd80.adapters.eth`
+Example: `USDC:BASE:swift-fox.adapters.eth`
 
 ## Usage
 
@@ -49,7 +49,7 @@ ILendingAdapter.AdapterMetadata memory metadata = adapter.getAdapterMetadata();
 
 // Generate the standardized ID
 string memory adapterId = AdapterIdGenerator.generateAdapterId(metadata);
-// Result: "USDC:BASE:0xa238dd80"
+// Result: "USDC:BASE:swift-fox" (word-based identifier is deterministic)
 ```
 
 ### ENS Registration
@@ -60,7 +60,7 @@ string memory ensName = AdapterIdGenerator.generateAdapterIdWithDomain(
     metadata,
     "adapters.eth"
 );
-// Result: "USDC:BASE:0xa238dd80.adapters.eth"
+// Result: "USDC:BASE:swift-fox.adapters.eth"
 
 // Generate ENS namehash for registration
 bytes32 node = AdapterIdGenerator.generateENSNode(metadata, "adapters.eth");
@@ -126,19 +126,20 @@ For chains not in the mapping, the format defaults to `CHAIN_{chainId}`:
 
 ## Implementation Details
 
-### Address Hashing
+### Word-Based Address Encoding
 
-The address hash is the first 4 bytes (8 hex characters) of the protocol contract address:
+The word-based identifier uses a deterministic hash of the protocol contract address to select two words from predefined dictionaries:
 
 ```solidity
 // Input: 0x1234567890123456789012345678901234567890
-// Output: 0x12345678
+// Output: "swift-fox" (deterministic based on keccak256 hash)
 ```
 
 This provides:
-- **Uniqueness**: Low collision probability with 4 bytes (4.3 billion possibilities)
-- **Human-Friendly**: Short enough to read and verify
-- **Deterministic**: Always produces the same hash for the same address
+- **Uniqueness**: 4,096 possible combinations (64 adjectives × 64 nouns)
+- **Human-Friendly**: Easy to remember and communicate (e.g., "swift-fox", "golden-eagle")
+- **Deterministic**: Always produces the same word pair for the same address
+- **No Hex**: Completely human-readable with no technical characters
 
 ### Chain Name Resolution
 
