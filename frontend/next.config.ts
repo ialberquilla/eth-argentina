@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Webpack configuration to exclude Node.js modules from client bundle
+  // Required for Privy + WalletConnect dependencies compatibility
   webpack: (config, { isServer }) => {
-    // Fix for Privy/WalletConnect dependencies trying to use Node.js modules in the browser
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
