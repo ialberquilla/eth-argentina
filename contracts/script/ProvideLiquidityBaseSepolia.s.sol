@@ -30,7 +30,7 @@ contract ProvideLiquidityBaseSepolia is Script {
     address constant PERMIT2_ADDR = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     address constant USDC_ADDR = 0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f;
     address constant USDT_ADDR = 0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a;
-    address constant HOOK_ADDR = 0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4;
+    address constant HOOK_ADDR = 0xd1b0f8F27aad2292765E2Ca645e7eF1A692980c4;
 
     // --- Configuration ---
     uint24 constant LP_FEE = 3000;

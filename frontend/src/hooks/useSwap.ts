@@ -70,7 +70,7 @@ export function useSwap() {
         params.tokenIn.toLowerCase() === POOL_CONFIG.currency0.toLowerCase();
 
       // Encode hook data: abi.encode(string adapterIdentifier, string recipientIdentifier)
-      // adapterIdentifier can be ENS name (e.g., "usdt-basesepolia-aave.onetx.base.eth") or address string
+      // adapterIdentifier is the adapter address as a string
       // recipientIdentifier is the user's wallet address as string
       const hookData = encodeAbiParameters(
         [{ type: "string" }, { type: "string" }],
@@ -85,18 +85,25 @@ export function useSwap() {
         args: [userAddress, CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address],
       })) as bigint;
 
+      console.log("Current allowance:", allowance.toString(), "Required:", amountIn.toString());
+
       if (allowance < amountIn) {
-        console.log("Approving token...");
+        console.log("Approving token for unlimited amount...");
         const approveTx = await walletClient.writeContract({
           address: params.tokenIn,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address, amountIn],
+          args: [CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")],
           account: userAddress,
         });
         console.log("Token approval tx:", approveTx);
-        // Wait a bit for approval to be mined
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        // Wait for approval transaction to be mined
+        console.log("Waiting for approval to be confirmed...");
+        await publicClient.waitForTransactionReceipt({ hash: approveTx });
+        console.log("Approval confirmed!");
+      } else {
+        console.log("Sufficient allowance already exists");
       }
 
       // Step 2: Execute swap
