@@ -4,13 +4,13 @@
 
 export const CONTRACTS = {
   BASE_SEPOLIA: {
-    POOL_MANAGER: "0x7da1d65f8b249183667cde74c5cbd46dd38aa829",
+    POOL_MANAGER: "0x05e73354cfdd6745c338b50bcfdfa3aa6fa03408",
     SWAP_ROUTER: "0x71cd4ea054f9cb3d3bf6251a00673303411a7dd9", // Hookmate V4 SwapRouter on Base Sepolia
     USDT: "0x0a215d8ba66387dca84b284d18c3b4ec3de6e54a",
     USDC: "0xba50cd2a20f6da35d788639e581bca8d0b5d4d5f",
-    HOOK: "0x1d16eade6be2d9037f458d53d0b0fd216fc740c4",
-    ADAPTER: "0x6f0b25e2abca0b60109549b7823392e3312f505c",
-    AAVE_POOL: "0x6ae43d3271ff6888e7fc43fd7321a503ff738951",
+    HOOK: "0xd1b0f8f27aad2292765e2ca645e7ef1a692980c4",
+    ADAPTER: "0x992a8847c28f9cd9251d5382249a4d35523f510a",
+    AAVE_POOL: "0x6645d1d54aa2450e048cbdca38e032cfe8da7845",
   },
 } as const;
 
@@ -83,8 +83,8 @@ export const SWAP_ROUTER_ABI = [
  * Pool configuration for USDC/USDT pool
  */
 export const POOL_CONFIG = {
-  currency0: CONTRACTS.BASE_SEPOLIA.USDC,
-  currency1: CONTRACTS.BASE_SEPOLIA.USDT,
+  currency0: CONTRACTS.BASE_SEPOLIA.USDT,
+  currency1: CONTRACTS.BASE_SEPOLIA.USDC,
   fee: 3000, // 0.3%
   tickSpacing: 60,
   hooks: CONTRACTS.BASE_SEPOLIA.HOOK,
