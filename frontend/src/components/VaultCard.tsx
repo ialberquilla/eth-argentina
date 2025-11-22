@@ -94,14 +94,12 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
     }
 
     // For USDC -> USDT swap
-    // Use ENS name if available, otherwise use adapter address
-    const adapterIdentifier = vault.ensName || vault.adapterAddress;
-
+    // Use adapter address directly as string (safer than ENS name which we don't know the exact words for)
     const result = await executeSwap({
       tokenIn: CONTRACTS.BASE_SEPOLIA.USDC as `0x${string}`,
       tokenOut: vault.tokenAddress as `0x${string}`,
       amountIn: swapAmount,
-      adapterIdentifier: adapterIdentifier!,
+      adapterIdentifier: vault.adapterAddress!, // Send address as string
       recipientAddress: userAddress as `0x${string}`,
       slippageTolerance: 1,
     });
