@@ -11,6 +11,7 @@ export interface Vault {
   apy: number;
   tvl: string;
   riskLevel: "Low" | "Medium" | "High";
+  category: "lending" | "perpetuals" | "rwa";
   volatility: number;
   total24hVol: string;
   bestLeverage: string;
