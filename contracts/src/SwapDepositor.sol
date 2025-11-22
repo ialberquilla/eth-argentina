@@ -24,7 +24,7 @@ contract SwapDepositor is BaseHook {
 
     /// @notice Basenames Registry contract on Base mainnet
     IBasenameRegistry public constant BASENAME_REGISTRY =
-        IBasenameRegistry(0xb94704422c2a1e396835a571837aa5ae53285a95);
+        IBasenameRegistry(0xB94704422c2a1E396835A571837Aa5AE53285a95);
 
     /// @notice Stores swap context for resolving recipients in afterSwap
     /// @dev Maps swapId => SwapContext containing adapter and recipient info

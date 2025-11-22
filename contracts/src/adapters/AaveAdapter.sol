@@ -19,7 +19,7 @@ contract AaveAdapter is ILendingAdapter {
     IAavePool public immutable aavePool;
 
     /// @notice The token symbol this adapter is configured for
-    string public immutable symbol;
+    string public symbol;
 
     /// @notice Emitted when a deposit is made to Aave
     /// @param token The token that was deposited
@@ -38,13 +38,13 @@ contract AaveAdapter is ILendingAdapter {
     }
 
     /// @notice Returns the metadata for this lending adapter
-    /// @dev Returns the token symbol, chain ID, and Aave pool address
+    /// @dev Returns the token symbol, chain ID, and adapter address
     /// @return metadata The adapter metadata
     function getAdapterMetadata() external view override returns (AdapterMetadata memory metadata) {
         return AdapterMetadata({
             symbol: symbol,
             chainId: block.chainid,
-            protocolAddress: address(aavePool)
+            protocolAddress: address(this)
         });
     }
 
