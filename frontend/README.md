@@ -1,8 +1,37 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Features
+
+- **Privy Social Login**: Connect with email, Google, Twitter, Discord, GitHub, Apple, LinkedIn, TikTok, and wallet
+- **Arc Blockchain Support**: Full integration with Circle's Arc blockchain (testnet and mainnet)
+- **viem Integration**: Latest viem version for blockchain interactions
+- **Multi-chain Support**: Arc, Base, Ethereum, Arbitrum, Polygon, and Optimism
+
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Privy
+
+1. Go to [Privy Dashboard](https://dashboard.privy.io/) and create an account
+2. Create a new app and copy your App ID
+3. Create a `.env.local` file in the frontend directory:
+
+```bash
+cp .env.local.example .env.local
+```
+
+4. Add your Privy App ID to `.env.local`:
+
+```env
+NEXT_PUBLIC_PRIVY_APP_ID=your_actual_privy_app_id
+```
+
+### 3. Run the Development Server
 
 ```bash
 npm run dev
@@ -34,3 +63,41 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Privy Social Login Configuration
+
+This app supports multiple social login methods through Privy:
+
+- Email
+- Wallet (MetaMask, WalletConnect, etc.)
+- Google
+- Twitter
+- Discord
+- GitHub
+- Apple
+- LinkedIn
+- TikTok
+
+Users can connect using any of these methods, and Privy will create an embedded wallet for them automatically.
+
+## Arc Blockchain (Circle)
+
+The app is configured to support Circle's Arc blockchain:
+
+- **Arc Testnet** (Chain ID: 23244)
+  - RPC: https://arc-testnet.rpc.caldera.xyz/http
+  - Explorer: https://arc-testnet.calderaexplorer.xyz
+
+- **Arc Mainnet** (Chain ID: 23241)
+  - RPC: https://arc.rpc.caldera.xyz/http
+  - Explorer: https://arc.calderaexplorer.xyz
+
+The default chain is set to Arc Testnet. You can modify this in `src/lib/privy-config.ts`.
+
+## Additional Supported Networks
+
+- Base (Coinbase L2)
+- Ethereum Mainnet
+- Arbitrum One
+- Polygon PoS
+- Optimism
