@@ -18,6 +18,9 @@ contract AaveAdapter is ILendingAdapter {
     /// @notice The Aave v3 Pool contract
     IAavePool public immutable aavePool;
 
+    /// @notice The token symbol this adapter is configured for
+    string public immutable symbol;
+
     /// @notice Emitted when a deposit is made to Aave
     /// @param token The token that was deposited
     /// @param amount The amount deposited
@@ -26,9 +29,23 @@ contract AaveAdapter is ILendingAdapter {
 
     /// @notice Constructor
     /// @param _aavePool The address of the Aave v3 Pool contract
-    constructor(address _aavePool) {
+    /// @param _symbol The token symbol this adapter is configured for (e.g., "USDC", "DAI")
+    constructor(address _aavePool, string memory _symbol) {
         require(_aavePool != address(0), "AaveAdapter: Invalid pool address");
+        require(bytes(_symbol).length > 0, "AaveAdapter: Symbol cannot be empty");
         aavePool = IAavePool(_aavePool);
+        symbol = _symbol;
+    }
+
+    /// @notice Returns the metadata for this lending adapter
+    /// @dev Returns the token symbol, chain ID, and Aave pool address
+    /// @return metadata The adapter metadata
+    function getAdapterMetadata() external view override returns (AdapterMetadata memory metadata) {
+        return AdapterMetadata({
+            symbol: symbol,
+            chainId: block.chainid,
+            protocolAddress: address(aavePool)
+        });
     }
 
     /// @notice Deposits tokens into Aave v3

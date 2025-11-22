@@ -112,7 +112,7 @@ contract SwapDepositorTest is BaseTest {
         MockAavePool mockAavePool = new MockAavePool();
 
         // Deploy Aave adapter
-        AaveAdapter aaveAdapter = new AaveAdapter(address(mockAavePool));
+        AaveAdapter aaveAdapter = new AaveAdapter(address(mockAavePool), "MOCK");
 
         // Setup swap parameters
         uint256 amountIn = 1e18;
