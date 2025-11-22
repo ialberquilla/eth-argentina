@@ -31,6 +31,12 @@ export interface Vault {
   timeSinceLaunch: string;
   smartContractRiskScore: number;
   avatarColor: string;
+  // Contract Addresses (optional, for deployed pools)
+  tokenAddress?: string;
+  adapterAddress?: string;
+  poolManagerAddress?: string;
+  hookAddress?: string;
+  aavePoolAddress?: string;
 }
 
 interface VaultCardProps {
