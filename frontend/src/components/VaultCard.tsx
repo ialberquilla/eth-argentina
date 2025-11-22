@@ -40,6 +40,7 @@ export interface Vault {
   poolManagerAddress?: string;
   hookAddress?: string;
   aavePoolAddress?: string;
+  ensName?: string; // ENS name for the adapter (e.g., "usdt-basesepolia-word-word.onetx.base.eth")
 }
 
 interface VaultCardProps {
@@ -93,11 +94,14 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
     }
 
     // For USDC -> USDT swap
+    // Use ENS name if available, otherwise use adapter address
+    const adapterIdentifier = vault.ensName || vault.adapterAddress;
+
     const result = await executeSwap({
       tokenIn: CONTRACTS.BASE_SEPOLIA.USDC as `0x${string}`,
       tokenOut: vault.tokenAddress as `0x${string}`,
       amountIn: swapAmount,
-      adapterAddress: vault.adapterAddress as `0x${string}`,
+      adapterIdentifier: adapterIdentifier!,
       recipientAddress: userAddress as `0x${string}`,
       slippageTolerance: 1,
     });

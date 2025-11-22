@@ -15,7 +15,7 @@ export interface SwapParams {
   tokenIn: Address;
   tokenOut: Address;
   amountIn: string;
-  adapterAddress: Address;
+  adapterIdentifier: string; // ENS name or adapter address as string
   recipientAddress: Address;
   slippageTolerance?: number;
 }
@@ -52,11 +52,13 @@ export function useSwap() {
       const zeroForOne =
         params.tokenIn.toLowerCase() === POOL_CONFIG.currency0.toLowerCase();
 
-      // Encode hook data: abi.encode(string adapterAddress, string recipientAddress)
+      // Encode hook data: abi.encode(string adapterIdentifier, string recipientIdentifier)
+      // adapterIdentifier can be ENS name (e.g., "usdt-basesepolia-aave.onetx.base.eth") or address string
+      // recipientIdentifier is the user's wallet address as string
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
       const hookData = abiCoder.encode(
         ["string", "string"],
-        [params.adapterAddress, params.recipientAddress]
+        [params.adapterIdentifier, params.recipientAddress]
       );
 
       // Step 1: Approve token

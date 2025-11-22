@@ -5,8 +5,8 @@ import { Category } from "./CategoryMenu";
 
 const mockVaults: Vault[] = [
   {
-    id: "SV-BASE-001",
-    name: "SV-BASE-001",
+    id: "usdt-basesepolia-aave.onetx.base.eth",
+    name: "USDT Aave V3 Base Sepolia",
     protocol: "AAVE V3",
     network: "Base Sepolia",
     asset: "USDT",
@@ -36,6 +36,7 @@ const mockVaults: Vault[] = [
     poolManagerAddress: "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829",
     hookAddress: "0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4",
     aavePoolAddress: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
+    ensName: "usdt-basesepolia-aave.onetx.base.eth", // ENS name for adapter lookup
   },
   {
     id: "SV-ETH-002",
