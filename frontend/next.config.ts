@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Empty Turbopack config to acknowledge Next.js 16's default bundler
-  turbopack: {},
-  // Webpack configuration for fallback when using --webpack flag
+  // Webpack configuration to exclude Node.js modules from client bundle
+  // Required for Privy + WalletConnect dependencies compatibility
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
