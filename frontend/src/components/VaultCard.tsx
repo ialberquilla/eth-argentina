@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useState } from "react";
+import { useSwapDepositor } from "../hooks/useSwapDepositor";
 
 export interface Vault {
   id: string;
@@ -11,24 +13,7 @@ export interface Vault {
   apy: number;
   tvl: string;
   riskLevel: "Low" | "Medium" | "High";
-  volatility: number;
-  total24hVol: string;
-  bestLeverage: string;
-  bestFixedApy: number;
-  depeggingRisk: "Low" | "Medium" | "High";
-  // Advanced Risk Metrics
-  currentApy: number;
-  yieldStability: number;
-  // Capital Efficiency
-  lockupPeriod: string;
-  gasCost: string;
-  capitalUtilization: number;
-  currentCapacity: string;
-  maxCapacity: string;
-  // Protocol Safety
-  exploitHistory: string;
-  timeSinceLaunch: string;
-  smartContractRiskScore: number;
+  adapterAddress: string; 
   avatarColor: string;
 }
 
@@ -38,191 +23,142 @@ interface VaultCardProps {
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { swapAndDeposit } = useSwapDepositor();
+
+  const handleDeposit = async () => {
+    if (!amount) return;
+    try {
+      setIsLoading(true);
+      const hash = await swapAndDeposit(amount, vault.adapterAddress);
+      alert(`Transaction Sent! Hash: ${hash}`);
+      setAmount("");
+    } catch (e) {
+      console.error(e);
+      alert("Error: " + (e as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getRiskLevelColor = (risk: string) => {
     switch (risk) {
-      case "Low":
-        return "text-green-500";
-      case "Medium":
-        return "text-yellow-500";
-      case "High":
-        return "text-red-500";
-      default:
-        return "text-muted";
+      case "Low": return "text-green-500";
+      case "Medium": return "text-yellow-500";
+      case "High": return "text-red-500";
+      default: return "text-muted";
     }
   };
 
   return (
-    <div className="bg-card border-b border-border">
+    <div className="bg-card/50 backdrop-blur-md border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300">
       {/* Main Row */}
-      <div className="grid grid-cols-[auto_1fr_auto] gap-4 p-6 items-center hover:bg-card-hover transition-colors">
+      <div className="grid grid-cols-[auto_1fr_auto] gap-4 p-6 items-center cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         {/* Left: Avatar and Vault Info */}
-        <div className="flex items-center gap-4 min-w-[300px]">
-          <div
-            className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg ${vault.avatarColor}`}
-          >
-            U
+        <div className="flex items-center gap-4 min-w-[200px]">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ${vault.avatarColor}`}>
+            {vault.asset[0]}
           </div>
           <div>
-            <h3 className="text-foreground font-semibold text-base">{vault.name}</h3>
-            <p className="text-muted text-sm">
-              {vault.protocol} • {vault.network} • {vault.asset}
-            </p>
+            <h3 className="text-foreground font-bold text-lg tracking-tight">{vault.name}</h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="bg-secondary px-2 py-0.5 rounded text-xs">{vault.protocol}</span>
+              <span>•</span>
+              <span>{vault.network}</span>
+            </div>
           </div>
         </div>
 
         {/* Center: Metrics Grid */}
-        <div className="grid grid-cols-8 gap-6 text-sm">
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">APY</div>
-            <div className="text-green-500 font-semibold">{vault.apy.toFixed(2)}%</div>
+        <div className="grid grid-cols-4 gap-8 text-sm ml-8">
+          <div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">APY</div>
+            <div className="text-green-400 font-bold text-lg">{vault.apy.toFixed(2)}%</div>
           </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">TVL</div>
+          <div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">TVL</div>
             <div className="text-foreground font-semibold">{vault.tvl}</div>
           </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Risk Level</div>
-            <div className={`font-semibold ${getRiskLevelColor(vault.riskLevel)}`}>
-              {vault.riskLevel}
-            </div>
+          <div>
+            <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Risk</div>
+            <div className={`font-semibold ${getRiskLevelColor(vault.riskLevel)}`}>{vault.riskLevel}</div>
           </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Volatility</div>
-            <div className="text-foreground font-semibold">{vault.volatility.toFixed(2)}%</div>
-          </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Total 24h Vol</div>
-            <div className="text-foreground font-semibold">{vault.total24hVol}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Best Leverage</div>
-            <div className="text-foreground font-semibold">{vault.bestLeverage}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Best Fixed APY</div>
-            <div className="text-green-500 font-semibold">{vault.bestFixedApy.toFixed(2)}%</div>
-          </div>
-          <div className="text-center">
-            <div className="text-muted text-xs mb-1">Depegging Risk</div>
-            <div className={`font-semibold ${getRiskLevelColor(vault.depeggingRisk)}`}>
-              {vault.depeggingRisk}
-            </div>
+          <div>
+             <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Asset</div>
+             <div className="text-foreground font-semibold">{vault.asset}</div>
           </div>
         </div>
 
-        {/* Right: Expand Button and Allocate Capital */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-muted hover:text-foreground transition-colors p-2"
-          >
+        {/* Right: Arrow */}
+        <div className="pr-4">
             <svg
-              className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              className={`w-6 h-6 text-muted-foreground transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-          </button>
-          <button className="px-6 py-2 rounded-lg font-medium text-white transition-all bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90">
-            Allocate Capital
-          </button>
         </div>
       </div>
 
       {/* Expanded Section */}
       {isExpanded && (
-        <div className="px-6 pb-6 grid grid-cols-3 gap-8">
-          {/* Advanced Risk Metrics */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">📊</span>
-              <h4 className="text-muted text-xs font-semibold uppercase tracking-wider">
-                Advanced Risk Metrics
-              </h4>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Current APY</span>
-                <span className="text-green-500 font-semibold">{vault.currentApy.toFixed(2)}%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Yield Stability (σ)</span>
-                <span className="text-foreground font-semibold">{vault.yieldStability.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Capital Efficiency */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">⚡</span>
-              <h4 className="text-muted text-xs font-semibold uppercase tracking-wider">
-                Capital Efficiency
-              </h4>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Lock-up Period</span>
-                <span className="text-green-500 font-semibold">{vault.lockupPeriod}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Gas Cost (Est.)</span>
-                <span className="text-foreground font-semibold">{vault.gasCost}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Capital Utilization</span>
-                <span className="text-foreground font-semibold">{vault.capitalUtilization}%</span>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-foreground text-sm">Current Capacity</span>
-                  <span className="text-foreground font-semibold">
-                    {vault.currentCapacity} → {vault.maxCapacity}
-                  </span>
-                </div>
-                <div className="w-full bg-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"
-                    style={{ width: `${vault.capitalUtilization}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Protocol Safety */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">🛡️</span>
-              <h4 className="text-muted text-xs font-semibold uppercase tracking-wider">
-                Protocol Safety
-              </h4>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Exploit History</span>
-                <span className="text-green-500 font-semibold">{vault.exploitHistory}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-foreground text-sm">Time Since Launch</span>
-                <span className="text-foreground font-semibold">{vault.timeSinceLaunch}</span>
-              </div>
-              <div className="bg-card-hover rounded-lg p-4 mt-4">
-                <div className="flex items-center gap-4">
-                  <div className="text-5xl font-bold text-green-500">
-                    {vault.smartContractRiskScore}
+        <div className="px-6 pb-6 pt-2 border-t border-border/50 bg-card/30">
+           <div className="flex flex-col md:flex-row gap-8 mt-4">
+              
+              {/* Left: Details */}
+              <div className="flex-1 space-y-4">
+                  <h4 className="font-semibold text-foreground">Vault Strategy</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                      This vault automatically swaps your <strong>USDC</strong> for <strong>{vault.asset}</strong> and deposits it into {vault.protocol} to earn yield. 
+                      The entire process happens in a single transaction using the SwapDepositor hook.
+                  </p>
+                  <div className="flex gap-4 mt-4">
+                      <div className="bg-secondary/50 p-3 rounded-lg flex-1">
+                          <div className="text-xs text-muted-foreground">Earn (Est.)</div>
+                          <div className="text-green-400 font-mono font-semibold">+{vault.apy.toFixed(2)}% APY</div>
+                      </div>
+                      <div className="bg-secondary/50 p-3 rounded-lg flex-1">
+                          <div className="text-xs text-muted-foreground">Protection</div>
+                          <div className="text-foreground font-mono font-semibold">Auto-Compounding</div>
+                      </div>
                   </div>
-                  <div>
-                    <div className="text-muted text-xs uppercase tracking-wider">Smart Contract</div>
-                    <div className="text-muted text-xs uppercase tracking-wider">Risk Score</div>
-                  </div>
-                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Right: Action */}
+              <div className="w-full md:w-[350px] bg-background/50 p-5 rounded-xl border border-border shadow-sm">
+                  <h4 className="font-semibold text-foreground mb-4">Deposit USDC</h4>
+                  <div className="space-y-4">
+                      <div className="relative">
+                          <input 
+                              type="number" 
+                              placeholder="0.00" 
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
+                              className="w-full bg-background border border-input rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">USDC</span>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground flex justify-between px-1">
+                          <span>Balance: 0.00 USDC</span>
+                          <span>Max</span>
+                      </div>
+
+                      <button 
+                          onClick={handleDeposit}
+                          disabled={isLoading || !amount}
+                          className="w-full py-3.5 rounded-lg font-bold text-white transition-all bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+                      >
+                          {isLoading ? "Processing..." : "Deposit & Earn"}
+                      </button>
+                      <p className="text-[10px] text-center text-muted-foreground">
+                          Powered by Uniswap V4 & Aave V3
+                      </p>
+                  </div>
+              </div>
+
+           </div>
         </div>
       )}
     </div>
