@@ -34,11 +34,14 @@ Foundry-based Solidity contracts:
 - Invest in any vault with just USDC
 - Automatic token swaps and protocol deposits
 - Comprehensive risk metrics and analytics
+- **Cross-chain USDC transfers** via Circle's CCTP (Arc ↔ Base)
+- Optional automatic swaps after cross-chain transfers
 
 ### For AI Agents
 - **Get Products**: Call `getAllRegisteredAdapters()` to see all available yield products
 - **Buy with USDC**: Call `swap()` with the product's unique ID to buy
 - **One Transaction**: Automatically receive yield-bearing tokens
+- **Cross-Chain Bridge**: Transfer USDC from Arc to Base and trigger swaps
 - **Complete Documentation**: Visit `/docs` on the frontend
 
 ## Quick Start for AI Agents
@@ -101,6 +104,35 @@ User receives yield-bearing tokens (aUSDC/cUSDC/etc.)
 - **USDT Adapter**: `0x5531bc190eC0C74dC8694176Ad849277AbA21a5D`
 
 See [`contracts/DEPLOYED_ADDRESSES.md`](contracts/DEPLOYED_ADDRESSES.md) for complete deployment details.
+
+## Cross-Chain USDC Bridge (CCTP)
+
+This platform now supports **Circle's Cross-Chain Transfer Protocol (CCTP)** for seamless USDC transfers between Arc and Base blockchains with optional automatic swaps on arrival.
+
+### Features
+- Transfer USDC from Arc to Base (and vice versa)
+- Burn & mint mechanism (no wrapped tokens!)
+- Optional automatic swap execution on destination chain
+- ~15 second finality on testnet
+
+### Quick Start
+
+```typescript
+// Bridge 100 USDC from Arc to Base
+await bridgeUSDC({
+  amount: "100",
+  destinationChainId: 84532, // Base Sepolia
+  recipient: "0xYourAddress",
+  withSwap: true,
+  swapParams: {
+    tokenOut: "0xWETH_ADDRESS",
+    minAmountOut: "0.05",
+    deadline: Date.now() + 3600
+  }
+});
+```
+
+See **[CCTP_IMPLEMENTATION.md](CCTP_IMPLEMENTATION.md)** for complete documentation, contract addresses, and deployment guide.
 
 ## Documentation
 
