@@ -9,6 +9,15 @@ solc_version = "0.8.30"
 src = "src"
 via_ir = false
 
+# RPC endpoints for forking
+[rpc_endpoints]
+base = "https://mainnet.base.org"
+
+# Fork testing configuration
+[fork]
+url = "${RPC_URL}"
+block_number = 22000000
+
 [lint]
 exclude_lints = ["screaming-snake-case-immutable", "screaming-snake-case-const"]
 lint_on_build = false
