@@ -17,7 +17,7 @@ contract SwapSimpleScript is Script {
     address constant SWAP_ROUTER = 0x71cD4Ea054F9Cb3D3BF6251A00673303411A7DD9; // Hookmate router
     address constant USDC = 0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f;
     address constant USDT = 0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a;
-    address constant HOOK = 0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4;
+    address constant HOOK = 0xd1b0f8F27aad2292765E2Ca645e7eF1A692980c4;
     address constant USDT_ADAPTER = 0x6F0b25e2abca0b60109549b7823392e3312f505c;
 
     function run() external {
@@ -39,9 +39,10 @@ contract SwapSimpleScript is Script {
 
         require(usdcBalance >= 1e6, "Insufficient USDC balance - need at least 1 USDC");
 
+        // Ensure currencies are sorted: USDT < USDC
         PoolKey memory poolKey = PoolKey({
-            currency0: Currency.wrap(USDC),
-            currency1: Currency.wrap(USDT),
+            currency0: Currency.wrap(USDT),
+            currency1: Currency.wrap(USDC),
             fee: 3000,
             tickSpacing: 60,
             hooks: IHooks(HOOK)
@@ -49,7 +50,7 @@ contract SwapSimpleScript is Script {
 
         // Encode hookData: abi.encode(string adapterIdentifier, string recipientIdentifier)
         bytes memory hookData = abi.encode(
-            "0x6f0b25e2abca0b60109549b7823392e3312f505c", // USDT adapter (lowercase)
+            "0x992A8847C28F9cD9251D5382249A4d35523F510A", // New USDT adapter address
             vm.toString(deployer) // Recipient address as string
         );
 
@@ -64,10 +65,11 @@ contract SwapSimpleScript is Script {
 
         // Execute swap
         console2.log("Executing swap: 1 USDC -> USDT");
+        // USDC is currency1, USDT is currency0. We are swapping USDC -> USDT, so zeroForOne = false
         IUniswapV4Router04(payable(SWAP_ROUTER)).swapExactTokensForTokens({
             amountIn: 1e6, // 1 USDC
             amountOutMin: 0,
-            zeroForOne: true, // USDC -> USDT
+            zeroForOne: false, // USDC (currency1) -> USDT (currency0)
             poolKey: poolKey,
             hookData: hookData,
             receiver: deployer,
