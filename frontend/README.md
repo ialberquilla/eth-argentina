@@ -110,4 +110,4 @@ Simple 2-step process to buy DeFi yield products:
 1. **Get Products**: `getAllRegisteredAdapters()` returns all products with unique IDs
 2. **Buy**: Call `swap()` with the product ID and your address
 
-See **[`../docs/FOR_AGENTS.md`](../docs/FOR_AGENTS.md)** for complete documentation.
+Visit **`/docs`** for complete documentation with code examples.

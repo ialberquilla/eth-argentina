@@ -39,7 +39,7 @@ Foundry-based Solidity contracts:
 - **Get Products**: Call `getAllRegisteredAdapters()` to see all available yield products
 - **Buy with USDC**: Call `swap()` with the product's unique ID to buy
 - **One Transaction**: Automatically receive yield-bearing tokens
-- **Complete Documentation**: See [`docs/FOR_AGENTS.md`](docs/FOR_AGENTS.md)
+- **Complete Documentation**: Visit `/docs` on the frontend
 
 ## Quick Start for AI Agents
 
@@ -58,7 +58,7 @@ await swap(poolKey, swapParams, hookData);
 // Done! You receive yield-bearing tokens (e.g., aUSDC)
 ```
 
-See full documentation: [`docs/FOR_AGENTS.md`](docs/FOR_AGENTS.md)
+See full documentation at `/docs` in the frontend
 
 ## How It Works
 
@@ -105,7 +105,7 @@ See [`contracts/DEPLOYED_ADDRESSES.md`](contracts/DEPLOYED_ADDRESSES.md) for com
 ## Documentation
 
 ### For AI Agents
-- **[For Agents](docs/FOR_AGENTS.md)** - Simple 2-step guide: get products, buy with USDC
+- **`/docs`** - Visit the /docs page in the frontend for complete guide with examples
 
 ### For Developers
 - **[Frontend README](frontend/README.md)** - Next.js app setup and configuration
