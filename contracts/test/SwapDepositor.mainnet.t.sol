@@ -91,7 +91,8 @@ contract SwapDepositorMainnetTest is BaseTest {
         console2.log("Deployed SwapDepositor hook at:", address(hook));
 
         // Deploy AaveAdapter with real Aave pool
-        aaveAdapter = new AaveAdapter(BaseConstants.AAVE_V3_POOL);
+        // After sorting, currency1 is USDbC (since USDC < USDbC by address)
+        aaveAdapter = new AaveAdapter(BaseConstants.AAVE_V3_POOL, "USDbC");
         console2.log("Deployed AaveAdapter at:", address(aaveAdapter));
 
         // Create the pool
