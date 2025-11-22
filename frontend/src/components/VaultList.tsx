@@ -6,7 +6,7 @@ import { Category } from "./CategoryMenu";
 const mockVaults: Vault[] = [
   {
     id: "usdt-basesepolia-swift-fox.onetx.base.eth",
-    name: "USDT Aave V3 Base Sepolia",
+    name: "usdt-basesepolia-swift-fox.onetx.base.eth",
     protocol: "AAVE V3",
     network: "Base Sepolia",
     asset: "USDT",
@@ -40,7 +40,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdc-ethereum-bright-wolf.onetx.base.eth",
-    name: "USDC Morpho Blue Ethereum",
+    name: "usdc-ethereum-bright-wolf.onetx.base.eth",
     protocol: "Morpho Blue",
     network: "Ethereum",
     asset: "USDC",
@@ -67,7 +67,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdt-arbitrum-calm-bear.onetx.base.eth",
-    name: "USDT Compound V3 Arbitrum",
+    name: "usdt-arbitrum-calm-bear.onetx.base.eth",
     protocol: "Compound V3",
     network: "Arbitrum",
     asset: "USDT",
@@ -94,7 +94,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "lp-polygon-bold-hawk.onetx.base.eth",
-    name: "USDC/USDT/DAI Curve 3Pool Polygon",
+    name: "lp-polygon-bold-hawk.onetx.base.eth",
     protocol: "Curve 3Pool",
     network: "Polygon",
     asset: "USDC/USDT/DAI",
@@ -121,7 +121,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "dai-ethereum-wise-eagle.onetx.base.eth",
-    name: "DAI Spark Protocol Ethereum",
+    name: "dai-ethereum-wise-eagle.onetx.base.eth",
     protocol: "Spark Protocol",
     network: "Ethereum",
     asset: "DAI → sDAI",
@@ -148,7 +148,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdc-optimism-pure-lion.onetx.base.eth",
-    name: "USDC Yearn Finance Optimism",
+    name: "usdc-optimism-pure-lion.onetx.base.eth",
     protocol: "Yearn Finance",
     network: "Optimism",
     asset: "USDC",
@@ -175,7 +175,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "dai-arbitrum-noble-tiger.onetx.base.eth",
-    name: "DAI Aave V3 Arbitrum",
+    name: "dai-arbitrum-noble-tiger.onetx.base.eth",
     protocol: "AAVE V3",
     network: "Arbitrum",
     asset: "DAI",
@@ -202,7 +202,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "stables-ethereum-brave-dragon.onetx.base.eth",
-    name: "USDC/USDT Ether.fi Cash Ethereum",
+    name: "stables-ethereum-brave-dragon.onetx.base.eth",
     protocol: "Ether.fi Cash",
     network: "Ethereum",
     asset: "USDC/USDT",
@@ -229,7 +229,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdc-base-quick-phoenix.onetx.base.eth",
-    name: "USDC Morpho Blue Base",
+    name: "usdc-base-quick-phoenix.onetx.base.eth",
     protocol: "Morpho Blue",
     network: "Base",
     asset: "USDC",
@@ -257,7 +257,7 @@ const mockVaults: Vault[] = [
   // Perpetuals
   {
     id: "glp-arbitrum-smart-raven.onetx.base.eth",
-    name: "GLP GMX V2 Arbitrum",
+    name: "glp-arbitrum-smart-raven.onetx.base.eth",
     protocol: "GMX V2",
     network: "Arbitrum",
     asset: "GLP",
@@ -284,7 +284,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "susd-optimism-proud-owl.onetx.base.eth",
-    name: "sUSD Synthetix Perps Optimism",
+    name: "susd-optimism-proud-owl.onetx.base.eth",
     protocol: "Synthetix Perps",
     network: "Optimism",
     asset: "sUSD",
@@ -311,7 +311,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdc-dydx-fresh-falcon.onetx.base.eth",
-    name: "USDC dYdX V4 dYdX Chain",
+    name: "usdc-dydx-fresh-falcon.onetx.base.eth",
     protocol: "dYdX V4",
     network: "dYdX Chain",
     asset: "USDC",
@@ -338,7 +338,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "dai-polygon-crisp-panther.onetx.base.eth",
-    name: "DAI Gains Network Polygon",
+    name: "dai-polygon-crisp-panther.onetx.base.eth",
     protocol: "Gains Network",
     network: "Polygon",
     asset: "DAI",
@@ -366,7 +366,7 @@ const mockVaults: Vault[] = [
   // Real World Assets
   {
     id: "usdy-ethereum-clear-lynx.onetx.base.eth",
-    name: "USDY Ondo Finance Ethereum",
+    name: "usdy-ethereum-clear-lynx.onetx.base.eth",
     protocol: "Ondo Finance",
     network: "Ethereum",
     asset: "USDY",
@@ -393,7 +393,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "usdc-ethereum-warm-orca.onetx.base.eth",
-    name: "USDC Maple Finance Ethereum",
+    name: "usdc-ethereum-warm-orca.onetx.base.eth",
     protocol: "Maple Finance",
     network: "Ethereum",
     asset: "USDC",
@@ -420,7 +420,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "dai-ethereum-cool-shark.onetx.base.eth",
-    name: "DAI Centrifuge Ethereum",
+    name: "dai-ethereum-cool-shark.onetx.base.eth",
     protocol: "Centrifuge",
     network: "Ethereum",
     asset: "DAI",
@@ -447,7 +447,7 @@ const mockVaults: Vault[] = [
   },
   {
     id: "bib01-ethereum-fair-whale.onetx.base.eth",
-    name: "bIB01 Backed Finance Ethereum",
+    name: "bib01-ethereum-fair-whale.onetx.base.eth",
     protocol: "Backed Finance",
     network: "Ethereum",
     asset: "bIB01",
