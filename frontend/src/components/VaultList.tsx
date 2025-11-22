@@ -5,7 +5,7 @@ import { Category } from "./CategoryMenu";
 
 const mockVaults: Vault[] = [
   {
-    id: "usdt-basesepolia-aave.onetx.base.eth",
+    id: "usdt-basesepolia-swift-fox.onetx.base.eth",
     name: "USDT Aave V3 Base Sepolia",
     protocol: "AAVE V3",
     network: "Base Sepolia",
@@ -36,11 +36,11 @@ const mockVaults: Vault[] = [
     poolManagerAddress: "0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829",
     hookAddress: "0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4",
     aavePoolAddress: "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951",
-    ensName: "usdt-basesepolia-aave.onetx.base.eth", // ENS name for adapter lookup
+    ensName: "usdt-basesepolia-swift-fox.onetx.base.eth", // ENS name for adapter lookup
   },
   {
-    id: "SV-ETH-002",
-    name: "SV-ETH-002",
+    id: "usdc-ethereum-bright-wolf.onetx.base.eth",
+    name: "USDC Morpho Blue Ethereum",
     protocol: "Morpho Blue",
     network: "Ethereum",
     asset: "USDC",
@@ -66,8 +66,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-purple-600",
   },
   {
-    id: "SV-ARB-003",
-    name: "SV-ARB-003",
+    id: "usdt-arbitrum-calm-bear.onetx.base.eth",
+    name: "USDT Compound V3 Arbitrum",
     protocol: "Compound V3",
     network: "Arbitrum",
     asset: "USDT",
@@ -93,8 +93,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-green-600",
   },
   {
-    id: "SV-POL-005",
-    name: "SV-POL-005",
+    id: "lp-polygon-bold-hawk.onetx.base.eth",
+    name: "USDC/USDT/DAI Curve 3Pool Polygon",
     protocol: "Curve 3Pool",
     network: "Polygon",
     asset: "USDC/USDT/DAI",
@@ -120,8 +120,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-indigo-600",
   },
   {
-    id: "SV-ETH-006",
-    name: "SV-ETH-006",
+    id: "dai-ethereum-wise-eagle.onetx.base.eth",
+    name: "DAI Spark Protocol Ethereum",
     protocol: "Spark Protocol",
     network: "Ethereum",
     asset: "DAI → sDAI",
@@ -147,8 +147,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-orange-600",
   },
   {
-    id: "SV-OPT-007",
-    name: "SV-OPT-007",
+    id: "usdc-optimism-pure-lion.onetx.base.eth",
+    name: "USDC Yearn Finance Optimism",
     protocol: "Yearn Finance",
     network: "Optimism",
     asset: "USDC",
@@ -174,8 +174,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-cyan-600",
   },
   {
-    id: "SV-ARB-008",
-    name: "SV-ARB-008",
+    id: "dai-arbitrum-noble-tiger.onetx.base.eth",
+    name: "DAI Aave V3 Arbitrum",
     protocol: "AAVE V3",
     network: "Arbitrum",
     asset: "DAI",
@@ -201,8 +201,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-rose-600",
   },
   {
-    id: "SV-ETH-009",
-    name: "SV-ETH-009",
+    id: "stables-ethereum-brave-dragon.onetx.base.eth",
+    name: "USDC/USDT Ether.fi Cash Ethereum",
     protocol: "Ether.fi Cash",
     network: "Ethereum",
     asset: "USDC/USDT",
@@ -228,8 +228,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-pink-600",
   },
   {
-    id: "SV-BASE-010",
-    name: "SV-BASE-010",
+    id: "usdc-base-quick-phoenix.onetx.base.eth",
+    name: "USDC Morpho Blue Base",
     protocol: "Morpho Blue",
     network: "Base",
     asset: "USDC",
@@ -256,8 +256,8 @@ const mockVaults: Vault[] = [
   },
   // Perpetuals
   {
-    id: "SV-PERP-001",
-    name: "SV-PERP-001",
+    id: "glp-arbitrum-smart-raven.onetx.base.eth",
+    name: "GLP GMX V2 Arbitrum",
     protocol: "GMX V2",
     network: "Arbitrum",
     asset: "GLP",
@@ -283,8 +283,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-violet-600",
   },
   {
-    id: "SV-PERP-002",
-    name: "SV-PERP-002",
+    id: "susd-optimism-proud-owl.onetx.base.eth",
+    name: "sUSD Synthetix Perps Optimism",
     protocol: "Synthetix Perps",
     network: "Optimism",
     asset: "sUSD",
@@ -310,8 +310,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-fuchsia-600",
   },
   {
-    id: "SV-PERP-003",
-    name: "SV-PERP-003",
+    id: "usdc-dydx-fresh-falcon.onetx.base.eth",
+    name: "USDC dYdX V4 dYdX Chain",
     protocol: "dYdX V4",
     network: "dYdX Chain",
     asset: "USDC",
@@ -337,8 +337,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-purple-700",
   },
   {
-    id: "SV-PERP-004",
-    name: "SV-PERP-004",
+    id: "dai-polygon-crisp-panther.onetx.base.eth",
+    name: "DAI Gains Network Polygon",
     protocol: "Gains Network",
     network: "Polygon",
     asset: "DAI",
@@ -365,8 +365,8 @@ const mockVaults: Vault[] = [
   },
   // Real World Assets
   {
-    id: "SV-RWA-001",
-    name: "SV-RWA-001",
+    id: "usdy-ethereum-clear-lynx.onetx.base.eth",
+    name: "USDY Ondo Finance Ethereum",
     protocol: "Ondo Finance",
     network: "Ethereum",
     asset: "USDY",
@@ -392,8 +392,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-emerald-600",
   },
   {
-    id: "SV-RWA-002",
-    name: "SV-RWA-002",
+    id: "usdc-ethereum-warm-orca.onetx.base.eth",
+    name: "USDC Maple Finance Ethereum",
     protocol: "Maple Finance",
     network: "Ethereum",
     asset: "USDC",
@@ -419,8 +419,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-lime-600",
   },
   {
-    id: "SV-RWA-003",
-    name: "SV-RWA-003",
+    id: "dai-ethereum-cool-shark.onetx.base.eth",
+    name: "DAI Centrifuge Ethereum",
     protocol: "Centrifuge",
     network: "Ethereum",
     asset: "DAI",
@@ -446,8 +446,8 @@ const mockVaults: Vault[] = [
     avatarColor: "bg-teal-700",
   },
   {
-    id: "SV-RWA-004",
-    name: "SV-RWA-004",
+    id: "bib01-ethereum-fair-whale.onetx.base.eth",
+    name: "bIB01 Backed Finance Ethereum",
     protocol: "Backed Finance",
     network: "Ethereum",
     asset: "bIB01",
