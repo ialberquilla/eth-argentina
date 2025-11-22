@@ -7,6 +7,41 @@ import { CategoryMenu, Category } from "@/components/CategoryMenu";
 export default function DocsPage() {
   const [selectedCategory] = useState<Category>("all");
 
+  const codeExample = `import { createPublicClient, createWalletClient, http, encodeAbiParameters } from 'viem';
+import { baseSepolia } from 'viem/chains';
+
+// Step 1: Discover all available products
+const products = await publicClient.readContract({
+  address: '0x7425AAa97230f6D575193667cfd402b0B89C47f2',
+  abi: registryABI,
+  functionName: 'getAllRegisteredAdapters'
+});
+
+// Step 2: Trade and earn yield automatically
+const hookData = encodeAbiParameters(
+  [{ type: 'string' }, { type: 'string' }],
+  [products[0].adapterId, myAddress]
+);
+
+await walletClient.writeContract({
+  address: SWAP_ROUTER_ADDRESS,
+  abi: swapRouterABI,
+  functionName: 'swap',
+  args: [poolKey, swapParams, hookData]
+});
+
+// Done! You now hold yield-bearing tokens`;
+
+  const functionSignature1 = `function getAllRegisteredAdapters()
+  external view
+  returns (AdapterInfo[] memory)`;
+
+  const functionSignature2 = `function swap(
+  PoolKey calldata key,
+  IPoolManager.SwapParams calldata params,
+  bytes calldata hookData
+) external returns (BalanceDelta)`;
+
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
       <div className="max-w-[1600px] mx-auto">
@@ -62,10 +97,8 @@ export default function DocsPage() {
                 </p>
 
                 <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
-                  <pre className="text-sm font-mono overflow-x-auto">
-{`function getAllRegisteredAdapters()
-  external view
-  returns (AdapterInfo[] memory)`}
+                  <pre className="text-sm font-mono overflow-x-auto whitespace-pre">
+                    {functionSignature1}
                   </pre>
                 </div>
 
@@ -94,19 +127,19 @@ export default function DocsPage() {
                 <div className="bg-muted/30 border border-border rounded-lg p-4">
                   <p className="text-sm font-semibold mb-2">AdapterInfo structure:</p>
                   <div className="space-y-2 text-sm font-mono">
-                    <div className="grid grid-cols-[150px_1fr] gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <span className="text-muted-foreground">adapterAddress:</span>
                       <span>address</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <span className="text-muted-foreground">ensNode:</span>
                       <span>bytes32</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <span className="text-muted-foreground">domain:</span>
                       <span>string</span>
                     </div>
-                    <div className="grid grid-cols-[150px_1fr] gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <span className="text-muted-foreground">adapterId:</span>
                       <span>string</span>
                     </div>
@@ -123,12 +156,8 @@ export default function DocsPage() {
                 </p>
 
                 <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
-                  <pre className="text-sm font-mono overflow-x-auto">
-{`function swap(
-  PoolKey calldata key,
-  IPoolManager.SwapParams calldata params,
-  bytes calldata hookData
-) external returns (BalanceDelta)`}
+                  <pre className="text-sm font-mono overflow-x-auto whitespace-pre">
+                    {functionSignature2}
                   </pre>
                 </div>
 
@@ -196,32 +225,8 @@ export default function DocsPage() {
               </p>
 
               <div className="bg-black p-4 rounded-lg overflow-x-auto mb-4">
-                <pre className="text-sm text-green-400">
-{`import { createPublicClient, createWalletClient, http, encodeAbiParameters } from 'viem';
-import { baseSepolia } from 'viem/chains';
-
-// 1️⃣ Discover all available products
-const products = await publicClient.readContract({
-  address: '0x7425AAa97230f6D575193667cfd402b0B89C47f2',
-  abi: registryABI,
-  functionName: 'getAllRegisteredAdapters'
-});
-// Returns: [{ adapterId: "usdc-basesepolia-aave.onetx.base.eth", ... }, ...]
-
-// 2️⃣ Trade and earn yield automatically
-const hookData = encodeAbiParameters(
-  [{ type: 'string' }, { type: 'string' }],
-  [products[0].adapterId, myAddress]  // Select product and recipient
-);
-
-await walletClient.writeContract({
-  address: SWAP_ROUTER_ADDRESS,
-  abi: swapRouterABI,
-  functionName: 'swap',
-  args: [poolKey, swapParams, hookData]
-});
-
-// ✅ Done! You now hold yield-bearing tokens (e.g., aUSDC from Aave)`}
+                <pre className="text-sm text-green-400 whitespace-pre">
+                  {codeExample}
                 </pre>
               </div>
 
@@ -239,19 +244,19 @@ await walletClient.writeContract({
               <h2 className="text-2xl font-bold mb-4">Other Contract Addresses</h2>
               <p className="text-sm text-muted-foreground mb-4">Base Sepolia testnet:</p>
               <div className="space-y-3 font-mono text-sm">
-                <div className="grid grid-cols-[200px_1fr] gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <span className="text-muted-foreground">SwapDepositor Hook:</span>
                   <code>0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4</code>
                 </div>
-                <div className="grid grid-cols-[200px_1fr] gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <span className="text-muted-foreground">Pool Manager:</span>
                   <code>0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829</code>
                 </div>
-                <div className="grid grid-cols-[200px_1fr] gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <span className="text-muted-foreground">USDT Adapter:</span>
                   <code>0x6F0b25e2abca0b60109549b7823392e3312f505c</code>
                 </div>
-                <div className="grid grid-cols-[200px_1fr] gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <span className="text-muted-foreground">USDC Adapter:</span>
                   <code>0x6a546f500b9BDaF1d08acA6DF955e8919886604a</code>
                 </div>
@@ -259,7 +264,6 @@ await walletClient.writeContract({
             </section>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
