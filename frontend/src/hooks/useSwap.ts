@@ -10,6 +10,7 @@ import {
   custom,
   http,
   type Address,
+  encodeFunctionData,
 } from "viem";
 import { baseSepolia } from "@/lib/chains";
 import {
@@ -18,6 +19,7 @@ import {
   SWAP_ROUTER_ABI,
   POOL_CONFIG,
 } from "@/lib/contracts";
+import { writeContractGasless } from "@/lib/gasless-wallet";
 
 export interface SwapParams {
   tokenIn: Address;
@@ -88,15 +90,16 @@ export function useSwap() {
       console.log("Current allowance:", allowance.toString(), "Required:", amountIn.toString());
 
       if (allowance < amountIn) {
-        console.log("Approving token for unlimited amount...");
-        const approveTx = await walletClient.writeContract({
+        console.log("Approving token for unlimited amount (gasless)...");
+        const approveTx = await writeContractGasless({
           address: params.tokenIn,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")],
           account: userAddress,
+          chainId: 84532, // Base Sepolia
         });
-        console.log("Token approval tx:", approveTx);
+        console.log("Token approval tx (gasless):", approveTx);
 
         // Wait for approval transaction to be mined
         console.log("Waiting for approval to be confirmed...");
@@ -109,7 +112,7 @@ export function useSwap() {
       // Step 2: Execute swap
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes
 
-      console.log("Executing swap...", {
+      console.log("Executing swap (gasless)...", {
         amountIn: amountIn.toString(),
         amountOutMin: amountOutMin.toString(),
         zeroForOne,
@@ -119,7 +122,7 @@ export function useSwap() {
         deadline: deadline.toString(),
       });
 
-      const swapTx = await walletClient.writeContract({
+      const swapTx = await writeContractGasless({
         address: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address,
         abi: SWAP_ROUTER_ABI,
         functionName: "swapExactTokensForTokens",
@@ -133,9 +136,10 @@ export function useSwap() {
           deadline,
         ],
         account: userAddress,
+        chainId: 84532, // Base Sepolia
       });
 
-      console.log("Swap transaction sent:", swapTx);
+      console.log("Swap transaction sent (gasless):", swapTx);
       setTxHash(swapTx);
 
       return {

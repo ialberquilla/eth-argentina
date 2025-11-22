@@ -36,6 +36,7 @@ Foundry-based Solidity contracts:
 - Comprehensive risk metrics and analytics
 - **Cross-chain USDC transfers** via Circle's CCTP (Arc ↔ Base)
 - Optional automatic swaps after cross-chain transfers
+- **✨ Completely Gasless Transactions** - No gas fees ever! All transactions sponsored
 
 ### For AI Agents
 - **Get Products**: Call `getAllRegisteredAdapters()` to see all available yield products
@@ -43,6 +44,7 @@ Foundry-based Solidity contracts:
 - **One Transaction**: Automatically receive yield-bearing tokens
 - **Cross-Chain Bridge**: Transfer USDC from Arc to Base and trigger swaps
 - **Complete Documentation**: Visit `/docs` on the frontend
+- **Zero Gas Costs**: All transactions are gasless for end users
 
 ## Quick Start for AI Agents
 
@@ -133,6 +135,45 @@ await bridgeUSDC({
 ```
 
 See **[CCTP_IMPLEMENTATION.md](CCTP_IMPLEMENTATION.md)** for complete documentation, contract addresses, and deployment guide.
+
+## ✨ Gasless Transactions
+
+All transactions in this platform are **completely gasless** for end users. No need to hold ETH or worry about gas fees!
+
+### How It Works
+
+1. **Backend Relayer**: A dedicated relayer service pays for all gas costs
+2. **Transparent UX**: Users never see gas prompts or need to approve fees
+3. **All Operations Covered**: Approvals, swaps, bridges - everything is gasless
+
+### Supported Operations
+
+- ✅ Token approvals (ERC20)
+- ✅ Token swaps (Uniswap V4)
+- ✅ CCTP bridge initiation
+- ✅ CCTP bridge completion
+
+### Setup
+
+To enable gasless transactions for your deployment:
+
+1. **Generate a relayer wallet**:
+   ```bash
+   node -e "const { generatePrivateKey } = require('viem/accounts'); console.log(generatePrivateKey())"
+   ```
+
+2. **Fund the relayer wallet** with ETH on supported chains:
+   - Base Sepolia: Get free testnet ETH from [Base faucet](https://faucet.quicknode.com/base/sepolia)
+   - Base Mainnet: Fund with real ETH
+
+3. **Configure environment variables**:
+   ```env
+   RELAYER_PRIVATE_KEY=0x...
+   ```
+
+4. **Deploy and monitor**: The relayer will automatically pay for all user transactions
+
+See **[GASLESS_SETUP.md](GASLESS_SETUP.md)** for complete setup guide, security considerations, and monitoring.
 
 ## Documentation
 

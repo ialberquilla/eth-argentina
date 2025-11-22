@@ -14,11 +14,10 @@ export const privyConfig: PrivyClientConfig = {
     logo: undefined,
   },
 
-  // Embedded wallet configuration
+  // Embedded wallet configuration with smart wallet support for gasless transactions
   embeddedWallets: {
-    ethereum: {
-      createOnLogin: "users-without-wallets",
-    },
+    createOnLogin: "users-without-wallets",
+    requireUserPasswordOnCreate: false,
   },
 
   // Login methods - all social login options enabled

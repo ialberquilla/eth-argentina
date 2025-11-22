@@ -17,6 +17,7 @@ import {
 } from "viem";
 import { getCCTPConfig, getDomainId } from "../cctp-config";
 import { getAttestation } from "../attestation";
+import { writeContractGasless } from "../gasless-wallet";
 
 // CCTP TokenMessenger ABI (depositForBurn and depositForBurnWithCaller)
 const TOKEN_MESSENGER_ABI = [
@@ -184,13 +185,14 @@ export function useCCTPBridge() {
       }) as bigint;
 
       if (allowance < amount) {
-        setBridgeStatus("Approving USDC...");
-        const approveTx = await walletClient.writeContract({
+        setBridgeStatus("Approving USDC (gasless)...");
+        const approveTx = await writeContractGasless({
           address: sourceConfig.usdc as `0x${string}`,
           abi: USDC_ABI,
           functionName: "approve",
           args: [sourceConfig.tokenMessenger as `0x${string}`, amount],
-          chain: null,
+          account: wallet.address as `0x${string}`,
+          chainId: sourceChainId,
         });
 
         setBridgeStatus("Waiting for approval confirmation...");
@@ -206,8 +208,8 @@ export function useCCTPBridge() {
       // Convert recipient address to bytes32
       const mintRecipient = `0x${params.recipient.slice(2).padStart(64, "0")}` as `0x${string}`;
 
-      // Call depositForBurn
-      const txHash = await walletClient.writeContract({
+      // Call depositForBurn (gasless)
+      const txHash = await writeContractGasless({
         address: sourceConfig.tokenMessenger as `0x${string}`,
         abi: TOKEN_MESSENGER_ABI,
         functionName: "depositForBurn",
@@ -217,7 +219,8 @@ export function useCCTPBridge() {
           mintRecipient,
           sourceConfig.usdc as `0x${string}`,
         ],
-        chain: null,
+        account: wallet.address as `0x${string}`,
+        chainId: sourceChainId,
       });
 
       setBridgeStatus("Waiting for transaction confirmation...");
@@ -301,15 +304,16 @@ export function useCCTPBridge() {
         throw new Error(`CCTP not supported on destination chain ${destinationChainId}`);
       }
 
-      setBridgeStatus("Completing bridge on destination chain...");
+      setBridgeStatus("Completing bridge on destination chain (gasless)...");
 
-      // Call receiveMessage on destination chain
-      const txHash = await walletClient.writeContract({
+      // Call receiveMessage on destination chain (gasless)
+      const txHash = await writeContractGasless({
         address: destConfig.messageTransmitter as `0x${string}`,
         abi: MESSAGE_TRANSMITTER_ABI,
         functionName: "receiveMessage",
         args: [messageHash as `0x${string}`, attestation as `0x${string}`],
-        chain: null,
+        account: wallet.address as `0x${string}`,
+        chainId: destinationChainId,
       });
 
       setBridgeStatus("Bridge completed successfully!");
