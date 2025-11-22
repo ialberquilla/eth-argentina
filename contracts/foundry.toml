@@ -11,7 +11,7 @@ via_ir = false
 
 # RPC endpoints for forking
 [rpc_endpoints]
-base = "https://mainnet.base.org"
+base = "${BASE_RPC_URL}"
 
 # Fork testing configuration
 [fork]

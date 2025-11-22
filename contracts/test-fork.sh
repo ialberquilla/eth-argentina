@@ -14,33 +14,44 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}Running Base Mainnet Fork Tests${NC}"
 echo "================================"
 
-# Check if RPC URL is set (optional, will use public RPC if not set)
+# Check if RPC URL is set
 if [ -z "$BASE_RPC_URL" ]; then
-    echo "ℹ️  BASE_RPC_URL not set, using public Base RPC"
-    export BASE_RPC_URL="https://mainnet.base.org"
-fi
-
-# Default to recent block if not specified
-if [ -z "$FORK_BLOCK_NUMBER" ]; then
-    export FORK_BLOCK_NUMBER=22000000
-    echo "ℹ️  Using default fork block: $FORK_BLOCK_NUMBER"
+    echo "❌ BASE_RPC_URL not set"
+    echo "Please set BASE_RPC_URL environment variable"
+    echo "Example: export BASE_RPC_URL=https://mainnet.base.org"
+    exit 1
 fi
 
 echo ""
 echo "Configuration:"
 echo "  RPC URL: $BASE_RPC_URL"
-echo "  Fork Block: $FORK_BLOCK_NUMBER"
+if [ -n "$FORK_BLOCK_NUMBER" ]; then
+    echo "  Fork Block: $FORK_BLOCK_NUMBER"
+else
+    echo "  Fork Block: latest"
+fi
+if [ -n "$LIQUIDITY_AMOUNT" ]; then
+    echo "  Liquidity Amount: $LIQUIDITY_AMOUNT"
+fi
 echo ""
+
+# Build forge command
+FORGE_CMD="forge test --match-path 'test/SwapDepositor.mainnet.t.sol'"
+
+# Add fork block if specified
+if [ -n "$FORK_BLOCK_NUMBER" ]; then
+    FORGE_CMD="$FORGE_CMD --fork-block-number $FORK_BLOCK_NUMBER"
+fi
 
 # Run the fork tests
 if [ -z "$1" ]; then
     # Run all fork tests
     echo -e "${GREEN}Running all mainnet fork tests...${NC}"
-    forge test --match-path "test/SwapDepositor.mainnet.t.sol" --fork-url "$BASE_RPC_URL" --fork-block-number "$FORK_BLOCK_NUMBER" -vvv
+    eval "$FORGE_CMD -vvv"
 else
     # Run specific test
     echo -e "${GREEN}Running test: $1${NC}"
-    forge test --match-path "test/SwapDepositor.mainnet.t.sol" --match-test "$1" --fork-url "$BASE_RPC_URL" --fork-block-number "$FORK_BLOCK_NUMBER" -vvvv
+    eval "$FORGE_CMD --match-test '$1' -vvvv"
 fi
 
 echo ""

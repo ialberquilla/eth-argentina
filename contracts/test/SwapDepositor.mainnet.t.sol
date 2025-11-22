@@ -37,8 +37,9 @@ contract SwapDepositorMainnetTest is BaseTest {
     // Mainnet contracts
     IAavePool aavePool = IAavePool(BaseConstants.AAVE_V3_POOL);
     IERC20 usdc = IERC20(BaseConstants.USDC);
-    IERC20 weth = IERC20(BaseConstants.WETH);
+    IERC20 usdbc = IERC20(BaseConstants.USDbC);
     IERC20 aUSDC = IERC20(BaseConstants.aUSDC);
+    IERC20 aUSDbC = IERC20(BaseConstants.aUSDbC);
 
     // Test contracts
     Currency currency0;
@@ -57,9 +58,7 @@ contract SwapDepositorMainnetTest is BaseTest {
     address liquidityProvider = address(0xCAFE);
 
     function setUp() public {
-        // Create fork at a recent block
-        // Note: You can override this by setting FORK_BLOCK_NUMBER env var
-        uint256 forkBlock = vm.envOr("FORK_BLOCK_NUMBER", uint256(22000000));
+        uint256 forkBlock = vm.envOr("FORK_BLOCK_NUMBER", block.number);
         vm.createSelectFork(vm.rpcUrl("base"), forkBlock);
 
         console2.log("Forked Base mainnet at block:", block.number);
@@ -67,17 +66,14 @@ contract SwapDepositorMainnetTest is BaseTest {
         // Deploy V4 infrastructure (not yet on Base mainnet)
         deployArtifactsAndLabel();
 
-        // Use real USDC and WETH from Base
+        // Use real stablecoins from Base
         currency0 = Currency.wrap(address(usdc));
-        currency1 = Currency.wrap(address(weth));
+        currency1 = Currency.wrap(address(usdbc));
 
         // Ensure currency0 < currency1 for Uniswap V4
         if (Currency.unwrap(currency0) > Currency.unwrap(currency1)) {
             (currency0, currency1) = (currency1, currency0);
         }
-
-        console2.log("Currency0 (USDC):", Currency.unwrap(currency0));
-        console2.log("Currency1 (WETH):", Currency.unwrap(currency1));
 
         // Deploy the hook to an address with the correct flags
         address flags = address(
@@ -114,35 +110,35 @@ contract SwapDepositorMainnetTest is BaseTest {
     function _setupLiquidityProvider() internal {
         // Fund liquidity provider from whale addresses
         address usdcWhale = BaseConstants.USDC_WHALE;
-        address wethWhale = BaseConstants.WETH_WHALE;
+        address usdbcWhale = BaseConstants.USDbC_WHALE;
 
         // Get USDC from whale
         vm.prank(usdcWhale);
         usdc.transfer(liquidityProvider, 1000000e6); // 1M USDC
 
-        // Get WETH from whale
-        vm.prank(wethWhale);
-        weth.transfer(liquidityProvider, 100e18); // 100 WETH
+        // Get USDbC from whale
+        vm.prank(usdbcWhale);
+        usdbc.transfer(liquidityProvider, 1000000e6); // 1M USDbC
 
         console2.log("Funded liquidity provider");
         console2.log("  USDC balance:", usdc.balanceOf(liquidityProvider));
-        console2.log("  WETH balance:", weth.balanceOf(liquidityProvider));
+        console2.log("  USDbC balance:", usdbc.balanceOf(liquidityProvider));
     }
 
     function _addLiquidity() internal {
         vm.startPrank(liquidityProvider);
 
         // Approve tokens
-        usdc.approve(address(permit2), type(uint256).max);
-        weth.approve(address(permit2), type(uint256).max);
-        permit2.approve(address(usdc), address(positionManager), type(uint160).max, type(uint48).max);
-        permit2.approve(address(weth), address(positionManager), type(uint160).max, type(uint48).max);
+        IERC20(Currency.unwrap(currency0)).approve(address(permit2), type(uint256).max);
+        IERC20(Currency.unwrap(currency1)).approve(address(permit2), type(uint256).max);
+        permit2.approve(Currency.unwrap(currency0), address(positionManager), type(uint160).max, type(uint48).max);
+        permit2.approve(Currency.unwrap(currency1), address(positionManager), type(uint160).max, type(uint48).max);
 
         // Setup liquidity position
         tickLower = TickMath.minUsableTick(poolKey.tickSpacing);
         tickUpper = TickMath.maxUsableTick(poolKey.tickSpacing);
 
-        uint128 liquidityAmount = 10e18; // Smaller amount for testing
+        uint128 liquidityAmount = uint128(vm.envOr("LIQUIDITY_AMOUNT", uint256(10e18)));
 
         (uint256 amount0Expected, uint256 amount1Expected) = LiquidityAmounts.getAmountsForLiquidity(
             Constants.SQRT_PRICE_1_1,
@@ -152,8 +148,8 @@ contract SwapDepositorMainnetTest is BaseTest {
         );
 
         console2.log("Adding liquidity:");
-        console2.log("  Amount0 (USDC):", amount0Expected);
-        console2.log("  Amount1 (WETH):", amount1Expected);
+        console2.log("  Amount0:", amount0Expected);
+        console2.log("  Amount1:", amount1Expected);
 
         (tokenId,) = positionManager.mint(
             poolKey,
@@ -181,10 +177,10 @@ contract SwapDepositorMainnetTest is BaseTest {
 
         // Approve for swapping
         vm.startPrank(user);
-        usdc.approve(address(permit2), type(uint256).max);
-        weth.approve(address(permit2), type(uint256).max);
-        permit2.approve(address(usdc), address(swapRouter), type(uint160).max, type(uint48).max);
-        permit2.approve(address(weth), address(swapRouter), type(uint160).max, type(uint48).max);
+        IERC20(Currency.unwrap(currency0)).approve(address(permit2), type(uint256).max);
+        IERC20(Currency.unwrap(currency1)).approve(address(permit2), type(uint256).max);
+        permit2.approve(Currency.unwrap(currency0), address(swapRouter), type(uint160).max, type(uint48).max);
+        permit2.approve(Currency.unwrap(currency1), address(swapRouter), type(uint160).max, type(uint48).max);
         vm.stopPrank();
 
         console2.log("Funded test user with USDC:", usdc.balanceOf(user));
@@ -196,38 +192,41 @@ contract SwapDepositorMainnetTest is BaseTest {
         vm.startPrank(user);
 
         uint256 amountIn = 1000e6; // 1000 USDC
-        uint256 usdcBefore = usdc.balanceOf(user);
-        uint256 wethBefore = weth.balanceOf(user);
+        IERC20 token0 = IERC20(Currency.unwrap(currency0));
+        IERC20 token1 = IERC20(Currency.unwrap(currency1));
+
+        uint256 token0Before = token0.balanceOf(user);
+        uint256 token1Before = token1.balanceOf(user);
 
         console2.log("Before swap:");
-        console2.log("  USDC:", usdcBefore);
-        console2.log("  WETH:", wethBefore);
+        console2.log("  Token0:", token0Before);
+        console2.log("  Token1:", token1Before);
 
         // Perform swap without hookData (no deposit to Aave)
         BalanceDelta swapDelta = swapRouter.swapExactTokensForTokens({
             amountIn: amountIn,
             amountOutMin: 0,
-            zeroForOne: true, // USDC -> WETH
+            zeroForOne: true,
             poolKey: poolKey,
             hookData: Constants.ZERO_BYTES,
             receiver: user,
             deadline: block.timestamp + 1
         });
 
-        uint256 usdcAfter = usdc.balanceOf(user);
-        uint256 wethAfter = weth.balanceOf(user);
+        uint256 token0After = token0.balanceOf(user);
+        uint256 token1After = token1.balanceOf(user);
 
         console2.log("After swap:");
-        console2.log("  USDC:", usdcAfter);
-        console2.log("  WETH:", wethAfter);
-        console2.log("  USDC spent:", usdcBefore - usdcAfter);
-        console2.log("  WETH received:", wethAfter - wethBefore);
+        console2.log("  Token0:", token0After);
+        console2.log("  Token1:", token1After);
+        console2.log("  Token0 spent:", token0Before - token0After);
+        console2.log("  Token1 received:", token1After - token1Before);
 
         vm.stopPrank();
 
         // Verify swap executed correctly
-        assertEq(usdcBefore - usdcAfter, amountIn, "Should spend exact USDC amount");
-        assertGt(wethAfter, wethBefore, "Should receive WETH");
+        assertEq(token0Before - token0After, amountIn, "Should spend exact token0 amount");
+        assertGt(token1After, token1Before, "Should receive token1");
     }
 
     function testMainnetForkSwapWithAaveDeposit() public {
@@ -236,16 +235,19 @@ contract SwapDepositorMainnetTest is BaseTest {
         vm.startPrank(user);
 
         address recipient = address(0x1234);
-        uint256 amountIn = 1000e6; // 1000 USDC
+        uint256 amountIn = 1000e6; // 1000 tokens
 
-        uint256 usdcBefore = usdc.balanceOf(user);
-        uint256 wethBefore = weth.balanceOf(user);
-        uint256 aTokenBefore = aUSDC.balanceOf(recipient); // Check WETH aTokens
+        IERC20 token0 = IERC20(Currency.unwrap(currency0));
+        IERC20 token1 = IERC20(Currency.unwrap(currency1));
+
+        uint256 token0Before = token0.balanceOf(user);
+        uint256 token1Before = token1.balanceOf(user);
+        uint256 aTokenBefore = aUSDbC.balanceOf(recipient);
 
         console2.log("Before swap:");
-        console2.log("  User USDC:", usdcBefore);
-        console2.log("  User WETH:", wethBefore);
-        console2.log("  Recipient aWETH:", aTokenBefore);
+        console2.log("  User token0:", token0Before);
+        console2.log("  User token1:", token1Before);
+        console2.log("  Recipient aToken1:", aTokenBefore);
 
         // Encode adapter address and recipient in hookData
         bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
@@ -254,37 +256,37 @@ contract SwapDepositorMainnetTest is BaseTest {
         BalanceDelta swapDelta = swapRouter.swapExactTokensForTokens({
             amountIn: amountIn,
             amountOutMin: 0,
-            zeroForOne: true, // USDC -> WETH
+            zeroForOne: true,
             poolKey: poolKey,
             hookData: hookData,
-            receiver: user, // User is receiver, but tokens go to Aave
+            receiver: user,
             deadline: block.timestamp + 1
         });
 
-        uint256 usdcAfter = usdc.balanceOf(user);
-        uint256 wethAfter = weth.balanceOf(user);
-        uint256 aTokenAfter = aUSDC.balanceOf(recipient);
+        uint256 token0After = token0.balanceOf(user);
+        uint256 token1After = token1.balanceOf(user);
+        uint256 aTokenAfter = aUSDbC.balanceOf(recipient);
 
         console2.log("After swap:");
-        console2.log("  User USDC:", usdcAfter);
-        console2.log("  User WETH:", wethAfter);
-        console2.log("  Recipient aWETH:", aTokenAfter);
-        console2.log("  aWETH received:", aTokenAfter - aTokenBefore);
+        console2.log("  User token0:", token0After);
+        console2.log("  User token1:", token1After);
+        console2.log("  Recipient aToken1:", aTokenAfter);
+        console2.log("  aToken1 received:", aTokenAfter - aTokenBefore);
 
         vm.stopPrank();
 
         // Verify tokens were spent
-        assertEq(usdcBefore - usdcAfter, amountIn, "Should spend exact USDC amount");
+        assertEq(token0Before - token0After, amountIn, "Should spend exact token0 amount");
 
-        // Verify user didn't receive WETH (went to Aave)
-        assertEq(wethAfter, wethBefore, "User should not receive WETH directly");
+        // Verify user didn't receive token1 (went to Aave)
+        assertEq(token1After, token1Before, "User should not receive token1 directly");
 
         // Verify recipient received aTokens from Aave
         assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aTokens from Aave");
 
         // Verify hook doesn't hold any tokens
-        assertEq(weth.balanceOf(address(hook)), 0, "Hook should not hold WETH");
-        assertEq(usdc.balanceOf(address(hook)), 0, "Hook should not hold USDC");
+        assertEq(token0.balanceOf(address(hook)), 0, "Hook should not hold token0");
+        assertEq(token1.balanceOf(address(hook)), 0, "Hook should not hold token1");
 
         console2.log("✓ Swap successfully deposited to Aave V3 on Base mainnet");
     }
@@ -293,20 +295,20 @@ contract SwapDepositorMainnetTest is BaseTest {
         console2.log("\n=== Testing multiple swaps with Aave deposit ===");
 
         address recipient = address(0x5678);
-        uint256 swapAmount = 500e6; // 500 USDC per swap
+        uint256 swapAmount = 500e6; // 500 tokens per swap
 
         vm.startPrank(user);
 
         bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
 
-        uint256 initialATokenBalance = aUSDC.balanceOf(recipient);
+        uint256 initialATokenBalance = aUSDbC.balanceOf(recipient);
         console2.log("Initial aToken balance:", initialATokenBalance);
 
         // Perform 3 swaps
         for (uint256 i = 0; i < 3; i++) {
             console2.log("\nSwap", i + 1);
 
-            uint256 aTokenBefore = aUSDC.balanceOf(recipient);
+            uint256 aTokenBefore = aUSDbC.balanceOf(recipient);
 
             swapRouter.swapExactTokensForTokens({
                 amountIn: swapAmount,
@@ -318,13 +320,13 @@ contract SwapDepositorMainnetTest is BaseTest {
                 deadline: block.timestamp + 1
             });
 
-            uint256 aTokenAfter = aUSDC.balanceOf(recipient);
+            uint256 aTokenAfter = aUSDbC.balanceOf(recipient);
             console2.log("  aToken increase:", aTokenAfter - aTokenBefore);
 
             assertGt(aTokenAfter, aTokenBefore, "aToken balance should increase");
         }
 
-        uint256 finalATokenBalance = aUSDC.balanceOf(recipient);
+        uint256 finalATokenBalance = aUSDbC.balanceOf(recipient);
         console2.log("\nFinal aToken balance:", finalATokenBalance);
         console2.log("Total aToken increase:", finalATokenBalance - initialATokenBalance);
 
@@ -334,55 +336,58 @@ contract SwapDepositorMainnetTest is BaseTest {
     }
 
     function testMainnetForkSwapReverseDirection() public {
-        console2.log("\n=== Testing reverse swap (WETH -> USDC) with Aave deposit ===");
+        console2.log("\n=== Testing reverse swap with Aave deposit ===");
 
-        // First, get some WETH for the user
-        vm.prank(BaseConstants.WETH_WHALE);
-        weth.transfer(user, 1e18); // 1 WETH
+        // First, get some token1 for the user
+        vm.prank(BaseConstants.USDbC_WHALE);
+        usdbc.transfer(user, 10000e6); // 10k USDbC
 
         vm.startPrank(user);
 
         address recipient = address(0x9ABC);
-        uint256 amountIn = 0.1e18; // 0.1 WETH
+        uint256 amountIn = 1000e6; // 1000 token1
 
-        uint256 wethBefore = weth.balanceOf(user);
-        uint256 usdcBefore = usdc.balanceOf(user);
+        IERC20 token0 = IERC20(Currency.unwrap(currency0));
+        IERC20 token1 = IERC20(Currency.unwrap(currency1));
+
+        uint256 token0Before = token0.balanceOf(user);
+        uint256 token1Before = token1.balanceOf(user);
         uint256 aTokenBefore = aUSDC.balanceOf(recipient);
 
         console2.log("Before swap:");
-        console2.log("  User WETH:", wethBefore);
-        console2.log("  User USDC:", usdcBefore);
-        console2.log("  Recipient aUSDC:", aTokenBefore);
+        console2.log("  User token0:", token0Before);
+        console2.log("  User token1:", token1Before);
+        console2.log("  Recipient aToken0:", aTokenBefore);
 
         bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
 
-        // Swap WETH -> USDC
+        // Swap token1 -> token0
         swapRouter.swapExactTokensForTokens({
             amountIn: amountIn,
             amountOutMin: 0,
-            zeroForOne: false, // WETH -> USDC
+            zeroForOne: false,
             poolKey: poolKey,
             hookData: hookData,
             receiver: user,
             deadline: block.timestamp + 1
         });
 
-        uint256 wethAfter = weth.balanceOf(user);
-        uint256 usdcAfter = usdc.balanceOf(user);
+        uint256 token0After = token0.balanceOf(user);
+        uint256 token1After = token1.balanceOf(user);
         uint256 aTokenAfter = aUSDC.balanceOf(recipient);
 
         console2.log("After swap:");
-        console2.log("  User WETH:", wethAfter);
-        console2.log("  User USDC:", usdcAfter);
-        console2.log("  Recipient aUSDC:", aTokenAfter);
-        console2.log("  aUSDC received:", aTokenAfter - aTokenBefore);
+        console2.log("  User token0:", token0After);
+        console2.log("  User token1:", token1After);
+        console2.log("  Recipient aToken0:", aTokenAfter);
+        console2.log("  aToken0 received:", aTokenAfter - aTokenBefore);
 
         vm.stopPrank();
 
         // Verify swap executed and tokens deposited to Aave
-        assertEq(wethBefore - wethAfter, amountIn, "Should spend exact WETH amount");
-        assertEq(usdcAfter, usdcBefore, "User should not receive USDC directly");
-        assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aUSDC from Aave");
+        assertEq(token1Before - token1After, amountIn, "Should spend exact token1 amount");
+        assertEq(token0After, token0Before, "User should not receive token0 directly");
+        assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aToken0 from Aave");
 
         console2.log("✓ Reverse swap successfully deposited to Aave");
     }

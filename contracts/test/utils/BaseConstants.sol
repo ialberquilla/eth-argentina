@@ -26,5 +26,6 @@ library BaseConstants {
     // ============ Helper Accounts ============
     // Well-funded accounts on Base for testing (whale addresses)
     address constant USDC_WHALE = 0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A; // Coinbase address with USDC
+    address constant USDbC_WHALE = 0x4c80E24119CFB836cdF0a6b53dc23F04F7e652CA; // Large USDbC holder
     address constant WETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC; // Binance wallet
 }
