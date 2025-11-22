@@ -13,11 +13,22 @@ contract AdapterRegistry is IAdapterRegistry {
     using AdapterIdGenerator for ILendingAdapter.AdapterMetadata;
     using ENSNamehash for string;
 
+    /// @notice Information about a registered adapter
+    struct AdapterInfo {
+        address adapterAddress;
+        bytes32 ensNode;
+        string domain;
+        string adapterId;
+    }
+
     /// @notice Maps ENS nodes to adapter addresses
     mapping(bytes32 => address) private adaptersByNode;
 
     /// @notice Maps adapter addresses to their ENS nodes for a given domain
     mapping(address => mapping(string => bytes32)) private nodesByAdapter;
+
+    /// @notice Array of all registered adapters
+    AdapterInfo[] private registeredAdapters;
 
     /// @notice Registers a lending adapter with ENS
     /// @param adapter The adapter contract to register
@@ -38,6 +49,11 @@ contract AdapterRegistry is IAdapterRegistry {
         // Register the adapter
         adaptersByNode[node] = adapter;
         nodesByAdapter[adapter][domain] = node;
+
+        // Add to registry array
+        registeredAdapters.push(
+            AdapterInfo({adapterAddress: adapter, ensNode: node, domain: domain, adapterId: adapterId})
+        );
 
         emit AdapterRegistered(adapterId, adapter, node);
     }
@@ -60,5 +76,17 @@ contract AdapterRegistry is IAdapterRegistry {
         bytes32 node = nodesByAdapter[adapter][domain];
         require(node != bytes32(0), "Adapter not registered for this domain");
         return node;
+    }
+
+    /// @notice Gets all registered adapters
+    /// @return An array of all registered adapter information
+    function getAllRegisteredAdapters() external view returns (AdapterInfo[] memory) {
+        return registeredAdapters;
+    }
+
+    /// @notice Gets the total number of registered adapters
+    /// @return The count of registered adapters
+    function getRegisteredAdapterCount() external view returns (uint256) {
+        return registeredAdapters.length;
     }
 }
