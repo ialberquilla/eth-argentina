@@ -2,8 +2,16 @@
 
 import { useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
-import { parseUnits, type Address } from "viem";
-import { ethers } from "ethers";
+import {
+  parseUnits,
+  encodeAbiParameters,
+  createWalletClient,
+  createPublicClient,
+  custom,
+  http,
+  type Address,
+} from "viem";
+import { baseSepolia } from "@/lib/chains";
 import {
   CONTRACTS,
   ERC20_ABI,
@@ -39,9 +47,18 @@ export function useSwap() {
 
       await wallet.switchChain(84532); // Base Sepolia
 
-      const provider = await wallet.getEthersProvider();
-      const signer = provider.getSigner();
-      const userAddress = await signer.getAddress();
+      const ethereumProvider = await wallet.getEthereumProvider();
+      const walletClient = createWalletClient({
+        chain: baseSepolia,
+        transport: custom(ethereumProvider),
+      });
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      const [userAddress] = await walletClient.getAddresses();
 
       // Parse amount with 6 decimals (USDC/USDT)
       const amountIn = parseUnits(params.amountIn, 6);
@@ -55,42 +72,35 @@ export function useSwap() {
       // Encode hook data: abi.encode(string adapterIdentifier, string recipientIdentifier)
       // adapterIdentifier can be ENS name (e.g., "usdt-basesepolia-aave.onetx.base.eth") or address string
       // recipientIdentifier is the user's wallet address as string
-      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-      const hookData = abiCoder.encode(
-        ["string", "string"],
+      const hookData = encodeAbiParameters(
+        [{ type: "string" }, { type: "string" }],
         [params.adapterIdentifier, params.recipientAddress]
       );
 
-      // Step 1: Approve token
-      const tokenContract = new ethers.Contract(
-        params.tokenIn,
-        ERC20_ABI,
-        signer
-      );
-
-      const allowance = await tokenContract.allowance(
-        userAddress,
-        CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER
-      );
+      // Step 1: Check allowance and approve if needed
+      const allowance = (await publicClient.readContract({
+        address: params.tokenIn,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [userAddress, CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address],
+      })) as bigint;
 
       if (allowance < amountIn) {
         console.log("Approving token...");
-        const approveTx = await tokenContract.approve(
-          CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER,
-          amountIn
-        );
-        await approveTx.wait();
-        console.log("Token approved");
+        const approveTx = await walletClient.writeContract({
+          address: params.tokenIn,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address, amountIn],
+          account: userAddress,
+        });
+        console.log("Token approval tx:", approveTx);
+        // Wait a bit for approval to be mined
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
 
       // Step 2: Execute swap
-      const swapRouter = new ethers.Contract(
-        CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER,
-        SWAP_ROUTER_ABI,
-        signer
-      );
-
-      const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes
 
       console.log("Executing swap...", {
         amountIn: amountIn.toString(),
@@ -99,28 +109,31 @@ export function useSwap() {
         poolKey: POOL_CONFIG,
         hookData,
         receiver: userAddress,
-        deadline,
+        deadline: deadline.toString(),
       });
 
-      const swapTx = await swapRouter.swapExactTokensForTokens(
-        amountIn,
-        amountOutMin,
-        zeroForOne,
-        POOL_CONFIG,
-        hookData,
-        userAddress,
-        deadline
-      );
+      const swapTx = await walletClient.writeContract({
+        address: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address,
+        abi: SWAP_ROUTER_ABI,
+        functionName: "swapExactTokensForTokens",
+        args: [
+          amountIn,
+          amountOutMin,
+          zeroForOne,
+          POOL_CONFIG,
+          hookData,
+          userAddress,
+          deadline,
+        ],
+        account: userAddress,
+      });
 
-      console.log("Swap transaction sent:", swapTx.hash);
-      setTxHash(swapTx.hash);
-
-      const receipt = await swapTx.wait();
-      console.log("Swap completed:", receipt);
+      console.log("Swap transaction sent:", swapTx);
+      setTxHash(swapTx);
 
       return {
         success: true,
-        txHash: swapTx.hash,
+        txHash: swapTx,
       };
     } catch (err: any) {
       console.error("Swap error:", err);
