@@ -27,16 +27,19 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IAavePool} from "../src/interfaces/IAavePool.sol";
 import {AdapterIdGenerator} from "../src/libraries/AdapterIdGenerator.sol";
 import {ILendingAdapter} from "../src/interfaces/ILendingAdapter.sol";
+import {ENSNamehash} from "../src/libraries/ENSNamehash.sol";
+import {IENSRegistry} from "../src/interfaces/IENSRegistry.sol";
 
 /// @title SwapDepositorMainnetTest
 /// @notice Fork tests for SwapDepositor using real Base mainnet contracts
-/// @dev This test forks Base mainnet and uses actual Aave V3 contracts
+/// @dev This test forks Base mainnet and uses actual Aave V3 contracts and real ENS/Basenames
 contract SwapDepositorMainnetTest is BaseTest {
     using EasyPosm for IPositionManager;
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
     using StateLibrary for IPoolManager;
     using AdapterIdGenerator for ILendingAdapter.AdapterMetadata;
+    using ENSNamehash for string;
 
     // Mainnet contracts
     IAavePool aavePool = IAavePool(BaseConstants.AAVE_V3_POOL);
@@ -53,6 +56,7 @@ contract SwapDepositorMainnetTest is BaseTest {
     AaveAdapter aaveAdapter;
     AdapterRegistry adapterRegistry;
     PoolId poolId;
+    bytes32 parentNode;
 
     // Adapter ENS names
     string adapterEnsName;
@@ -88,9 +92,21 @@ contract SwapDepositorMainnetTest is BaseTest {
             (currency0, currency1) = (currency1, currency0);
         }
 
-        // Deploy AdapterRegistry
-        adapterRegistry = new AdapterRegistry();
+        // Calculate parent node for base.eth using real ENS namehash
+        parentNode = ADAPTER_DOMAIN.namehash();
+        console2.log("Parent node (base.eth):");
+        console2.logBytes32(parentNode);
+
+        // Deploy AdapterRegistry with real Base mainnet ENS contracts
+        adapterRegistry = new AdapterRegistry(
+            BaseConstants.ENS_REGISTRY,
+            BaseConstants.L2_RESOLVER,
+            parentNode,
+            ADAPTER_DOMAIN
+        );
         console2.log("Deployed AdapterRegistry at:", address(adapterRegistry));
+        console2.log("Using ENS Registry:", BaseConstants.ENS_REGISTRY);
+        console2.log("Using L2 Resolver:", BaseConstants.L2_RESOLVER);
 
         // Deploy the hook to an address with the correct flags
         address flags = address(
@@ -109,6 +125,16 @@ contract SwapDepositorMainnetTest is BaseTest {
         console2.log("Deployed AaveAdapter at:", address(aaveAdapter));
 
         // Register the adapter in the registry
+        // We need to transfer ownership of base.eth to the AdapterRegistry so it can register subdomains
+        IENSRegistry ensRegistry = IENSRegistry(BaseConstants.ENS_REGISTRY);
+        address baseEthOwner = ensRegistry.owner(parentNode);
+        console2.log("base.eth owner:", baseEthOwner);
+
+        // Prank as the owner and transfer ownership to the AdapterRegistry
+        vm.prank(baseEthOwner);
+        ensRegistry.setOwner(parentNode, address(adapterRegistry));
+
+        // Now the AdapterRegistry can register adapters
         adapterRegistry.registerAdapter(address(aaveAdapter), ADAPTER_DOMAIN);
 
         // Generate the adapter ENS name for use in tests

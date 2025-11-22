@@ -7,16 +7,19 @@ import {console2} from "forge-std/console2.sol";
 import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {HookMiner} from "@uniswap/v4-periphery/src/utils/HookMiner.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 
 import {SwapDepositor} from "../src/SwapDepositor.sol";
 import {AdapterRegistry} from "../src/AdapterRegistry.sol";
 import {AaveAdapter} from "../src/adapters/AaveAdapter.sol";
 import {HookDeployer} from "../src/HookDeployer.sol";
+import {ENSNamehash} from "../src/libraries/ENSNamehash.sol";
+import {IENSRegistry} from "../src/interfaces/IENSRegistry.sol";
 
-/// @notice Comprehensive deployment script for Base Sepolia testnet
-/// @dev Deploys all required contracts: AdapterRegistry, AaveAdapters, and SwapDepositor Hook
-contract DeployBaseTestnetScript is Script {
+/// @notice Comprehensive deployment script for Base Sepolia testnet with real ENS integration
+/// @dev Deploys all required contracts and registers adapters in Base's ENS (Basenames)
+contract DeployBaseTestnetWithENSScript is Script {
+    using ENSNamehash for string;
+
     // Base Sepolia addresses
     address constant POOL_MANAGER = 0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829;
     address constant AAVE_POOL = 0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951;
@@ -25,8 +28,12 @@ contract DeployBaseTestnetScript is Script {
     address constant USDC = 0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f;
     address constant USDT = 0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a;
 
-    // ENS domain for adapters (using base.eth for Base network)
-    string constant ADAPTER_DOMAIN = "base.eth";
+    // Basenames (ENS) contract addresses on Base Sepolia
+    address constant ENS_REGISTRY = 0x1493b2567056c2181630115660963E13A8E32735;
+    address constant L2_RESOLVER = 0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA;
+
+    // ENS domain configuration
+    string constant ADAPTER_DOMAIN = "onetx.base.eth";
 
     function run() public {
         // Verify we're on Base Sepolia
@@ -34,29 +41,53 @@ contract DeployBaseTestnetScript is Script {
 
         console2.log("========================================");
         console2.log("Deploying to Base Sepolia Testnet");
+        console2.log("With Real ENS Integration (Basenames)");
         console2.log("Chain ID:", block.chainid);
         console2.log("Deployer:", msg.sender);
         console2.log("========================================\n");
 
+        // Calculate the parent node for base.eth
+        bytes32 parentNode = ADAPTER_DOMAIN.namehash();
+        console2.log("Parent Node (%s):", ADAPTER_DOMAIN);
+        console2.logBytes32(parentNode);
+        console2.log("");
+
+        console2.log("IMPORTANT:");
+        console2.log("This deployment will attempt to register subdomains under %s.", ADAPTER_DOMAIN);
+        console2.log("The deployer MUST own %s.", ADAPTER_DOMAIN);
+        console2.log("Ownership of %s will be transferred to the AdapterRegistry to allow subdomain creation.", ADAPTER_DOMAIN);
+        console2.log("");
+
         vm.startBroadcast();
 
         // ============================================
-        // 1. Deploy AdapterRegistry (Legacy mode - no ENS integration)
+        // 1. Deploy AdapterRegistry with ENS Integration
         // ============================================
-        console2.log("1. Deploying AdapterRegistry (LEGACY MODE - NO ENS)...");
-        console2.log("   NOTE: This uses a mock registry. For real ENS, use DeployBaseTestnetWithENS.s.sol");
+        console2.log("1. Deploying AdapterRegistry with ENS integration...");
+        console2.log("   ENS Registry:", ENS_REGISTRY);
+        console2.log("   L2 Resolver:", L2_RESOLVER);
+        console2.log("   Parent Node:");
+        console2.logBytes32(parentNode);
+        console2.log("   Domain:", ADAPTER_DOMAIN);
 
-        // For backward compatibility, deploy with dummy values
-        // This creates a non-functional ENS registry that won't actually register in ENS
-        bytes32 dummyNode = keccak256("dummy");
         AdapterRegistry adapterRegistry = new AdapterRegistry(
-            address(0xdead), // Dummy ENS registry
-            address(0xbeef), // Dummy resolver
-            dummyNode,
+            ENS_REGISTRY,
+            L2_RESOLVER,
+            parentNode,
             ADAPTER_DOMAIN
         );
         console2.log("   AdapterRegistry deployed at:", address(adapterRegistry));
-        console2.log("   WARNING: ENS integration is disabled in this deployment mode");
+        console2.log("");
+
+        // Transfer ownership of the parent node to the AdapterRegistry
+        // This allows the registry to create subdomains (e.g. usdc.onetx.base.eth)
+        console2.log("   Transferring ownership of %s to AdapterRegistry...", ADAPTER_DOMAIN);
+        try IENSRegistry(ENS_REGISTRY).setOwner(parentNode, address(adapterRegistry)) {
+             console2.log("   Ownership transferred successfully.");
+        } catch Error(string memory reason) {
+             console2.log("   FAILED to transfer ownership: %s", reason);
+             console2.log("   Ensure deployer (%s) owns %s", msg.sender, ADAPTER_DOMAIN);
+        }
         console2.log("");
 
         // ============================================
@@ -130,17 +161,32 @@ contract DeployBaseTestnetScript is Script {
         console2.log("");
 
         // ============================================
-        // 4. Register Adapters
+        // 4. Register Adapters in ENS
         // ============================================
-        console2.log("4. Registering Adapters in Registry...");
+        console2.log("4. Registering Adapters in ENS (Basenames)...");
+        console2.log("");
 
-        console2.log("   Registering USDC adapter...");
-        adapterRegistry.registerAdapter(address(usdcAdapter), ADAPTER_DOMAIN);
-        console2.log("   USDC adapter registered");
+        console2.log("   Registering USDC adapter in ENS...");
+        try adapterRegistry.registerAdapter(address(usdcAdapter), ADAPTER_DOMAIN) {
+            console2.log("   USDC adapter registered successfully in ENS!");
+        } catch Error(string memory reason) {
+            console2.log("   WARNING: Failed to register USDC adapter:");
+            console2.log("   ", reason);
+            console2.log("   This likely means you don't have permission to create subdomains under", ADAPTER_DOMAIN);
+        } catch {
+            console2.log("   WARNING: Failed to register USDC adapter (unknown error)");
+        }
+        console2.log("");
 
-        console2.log("   Registering USDT adapter...");
-        adapterRegistry.registerAdapter(address(usdtAdapter), ADAPTER_DOMAIN);
-        console2.log("   USDT adapter registered");
+        console2.log("   Registering USDT adapter in ENS...");
+        try adapterRegistry.registerAdapter(address(usdtAdapter), ADAPTER_DOMAIN) {
+            console2.log("   USDT adapter registered successfully in ENS!");
+        } catch Error(string memory reason) {
+            console2.log("   WARNING: Failed to register USDT adapter:");
+            console2.log("   ", reason);
+        } catch {
+            console2.log("   WARNING: Failed to register USDT adapter (unknown error)");
+        }
         console2.log("");
 
         vm.stopBroadcast();
@@ -163,20 +209,20 @@ contract DeployBaseTestnetScript is Script {
         console2.log("USDC Adapter:", address(usdcAdapter));
         console2.log("USDT Adapter:", address(usdtAdapter));
         console2.log("");
+        console2.log("--- ENS Configuration ---");
+        console2.log("ENS Registry:", ENS_REGISTRY);
+        console2.log("L2 Resolver:", L2_RESOLVER);
+        console2.log("Domain:", ADAPTER_DOMAIN);
+        console2.log("");
         console2.log("--- External Dependencies ---");
         console2.log("Pool Manager:", POOL_MANAGER);
         console2.log("Aave V3 Pool:", AAVE_POOL);
         console2.log("");
         console2.log("--- Next Steps ---");
-        console2.log("1. Verify contracts on Basescan (if needed)");
-        console2.log("2. Create a Uniswap V4 pool using 01_CreatePoolAndAddLiquidity.s.sol");
-        console2.log("3. Perform test swaps using 03_Swap.s.sol");
-        console2.log("");
-        console2.log("--- Adapter ENS Names ---");
-        console2.log("Adapters can be resolved using their ENS names:");
-        console2.log("Format: SYMBOL:BASE_SEPOLIA:word-word.base.eth");
-        console2.log("Example: USDC:BASE_SEPOLIA:swift-fox.base.eth");
-        console2.log("(Exact names are generated dynamically based on adapter address)");
+        console2.log("1. Run GetAdapterENSNames script to see the registered ENS names");
+        console2.log("2. Verify ENS registration on BaseScan");
+        console2.log("3. Create a Uniswap V4 pool using 01_CreatePoolAndAddLiquidity.s.sol");
+        console2.log("4. Perform test swaps using 03_Swap.s.sol");
         console2.log("========================================");
     }
 }

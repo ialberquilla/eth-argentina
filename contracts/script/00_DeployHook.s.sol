@@ -14,8 +14,14 @@ contract DeployHookScript is BaseScript {
     function run() public {
         vm.startBroadcast();
 
-        // Deploy AdapterRegistry first
-        AdapterRegistry adapterRegistry = new AdapterRegistry();
+        // Deploy AdapterRegistry first (with dummy ENS values for testing)
+        bytes32 dummyNode = keccak256("dummy");
+        AdapterRegistry adapterRegistry = new AdapterRegistry(
+            address(0xdead),
+            address(0xbeef),
+            dummyNode,
+            "base.eth"
+        );
 
         // hook contracts must have specific flags encoded in the address
         uint160 flags = uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_SWAP_FLAG | Hooks.AFTER_SWAP_RETURNS_DELTA_FLAG);

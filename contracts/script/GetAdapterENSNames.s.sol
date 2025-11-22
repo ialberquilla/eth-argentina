@@ -23,6 +23,7 @@ contract GetAdapterENSNamesScript is Script {
     function run() public view {
         console2.log("========================================");
         console2.log("Adapter ENS Names - Base Sepolia");
+        console2.log("New ENS-Compatible Format");
         console2.log("========================================\n");
 
         // Get USDC Adapter ENS name
@@ -80,11 +81,16 @@ contract GetAdapterENSNamesScript is Script {
         console2.log("To use these adapters in your swap:");
         console2.log("");
         console2.log("bytes memory hookData = abi.encode(");
-        console2.log("    \"", usdcEnsName, "\",  // Adapter ENS name");
-        console2.log("    \"0x1234...\"                    // Recipient address or basename");
+        console2.log("    \"", usdcEnsName, "\",");
+        console2.log("    \"your-recipient.base.eth\"  // Or address");
         console2.log(");");
         console2.log("");
         console2.log("swapRouter.swap(poolKey, swapParams, hookData);");
+        console2.log("");
+        console2.log("--- ENS NAMING FORMAT ---");
+        console2.log("New format: symbol-chain-identifier.base.eth");
+        console2.log("Example: usdc-basesepolia-clear-swan.base.eth");
+        console2.log("(All lowercase, dashes instead of colons)");
         console2.log("========================================");
     }
 }
