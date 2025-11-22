@@ -6,6 +6,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **Arc Blockchain Support**: Full integration with Circle's Arc blockchain (testnet and mainnet)
 - **viem Integration**: Latest viem version for blockchain interactions
 - **Multi-chain Support**: Arc, Base, Ethereum, Arbitrum, Polygon, and Optimism
+- **Agent Integration**: Documentation and examples for AI agents to interact directly with smart contracts
 
 ## Getting Started
 
@@ -101,3 +102,12 @@ The default chain is set to Arc Testnet. You can modify this in `src/lib/privy-c
 - Arbitrum One
 - Polygon PoS
 - Optimism
+
+## For AI Agents
+
+Simple 2-step process to buy DeFi yield products:
+
+1. **Get Products**: `getAllRegisteredAdapters()` returns all products with unique IDs
+2. **Buy**: Call `swap()` with the product ID and your address
+
+Visit **`/docs`** for complete documentation with code examples.
