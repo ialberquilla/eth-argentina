@@ -2,133 +2,243 @@
 
 import { useState } from "react";
 
-interface CryptoAsset {
-  id: number;
-  name: string;
-  symbol: string;
-  price: number;
-  change24h: number;
-  marketCap: number;
-  volume24h: number;
+export interface YieldProduct {
+  asset: string;
+  id: string;
+  protocol: string;
+  chain: string;
+  stablecoin: string;
+  apy: string;
+  tvl: string;
+  riskLevel: string;
+  volatility: string;
+  total24hVol: string;
+  bestLeverage: string;
+  bestFixedAPY: string;
+  depegRisk: string;
 }
 
-const mockCryptoData: CryptoAsset[] = [
+const mockYieldData: YieldProduct[] = [
   {
-    id: 1,
-    name: "Bitcoin",
-    symbol: "BTC",
-    price: 43250.75,
-    change24h: 2.45,
-    marketCap: 846000000000,
-    volume24h: 28500000000,
+    asset: "USDC",
+    id: "SV-BASE-001",
+    protocol: "AAVE V3",
+    chain: "Base",
+    stablecoin: "USDC",
+    apy: "4.67%",
+    tvl: "$1.2B",
+    riskLevel: "Low",
+    volatility: "0.01%",
+    total24hVol: "$45.2M",
+    bestLeverage: "1.0x",
+    bestFixedAPY: "4.67%",
+    depegRisk: "Low",
   },
   {
-    id: 2,
-    name: "Ethereum",
-    symbol: "ETH",
-    price: 2280.45,
-    change24h: 1.82,
-    marketCap: 274000000000,
-    volume24h: 15200000000,
+    asset: "USDC",
+    id: "SV-ETH-002",
+    protocol: "Morpho Blue",
+    chain: "Ethereum",
+    stablecoin: "USDC",
+    apy: "8.50%",
+    tvl: "$650M",
+    riskLevel: "Medium",
+    volatility: "0.02%",
+    total24hVol: "$28.5M",
+    bestLeverage: "3.5x",
+    bestFixedAPY: "8.50%",
+    depegRisk: "Low",
   },
   {
-    id: 3,
-    name: "Binance Coin",
-    symbol: "BNB",
-    price: 312.56,
-    change24h: -0.45,
-    marketCap: 48000000000,
-    volume24h: 1800000000,
+    asset: "USDT",
+    id: "SV-ARB-003",
+    protocol: "Compound V3",
+    chain: "Arbitrum",
+    stablecoin: "USDT",
+    apy: "3.80%",
+    tvl: "$890M",
+    riskLevel: "Low",
+    volatility: "0.02%",
+    total24hVol: "$38.7M",
+    bestLeverage: "1.0x",
+    bestFixedAPY: "3.80%",
+    depegRisk: "Low",
   },
   {
-    id: 4,
-    name: "Solana",
-    symbol: "SOL",
-    price: 98.34,
-    change24h: 5.23,
-    marketCap: 42000000000,
-    volume24h: 2100000000,
+    asset: "USDC/USDT/DAI",
+    id: "SV-POL-005",
+    protocol: "Curve 3Pool",
+    chain: "Polygon",
+    stablecoin: "USDC/USDT/DAI",
+    apy: "3.20%",
+    tvl: "$1.8B",
+    riskLevel: "Low",
+    volatility: "0.02%",
+    total24hVol: "$125.8M",
+    bestLeverage: "1.0x",
+    bestFixedAPY: "3.20%",
+    depegRisk: "Medium",
   },
   {
-    id: 5,
-    name: "Cardano",
-    symbol: "ADA",
-    price: 0.52,
-    change24h: -1.15,
-    marketCap: 18000000000,
-    volume24h: 450000000,
+    asset: "sDAI",
+    id: "SV-ETH-006",
+    protocol: "Spark Protocol",
+    chain: "Ethereum",
+    stablecoin: "DAI → sDAI",
+    apy: "4.50%",
+    tvl: "$2.7B",
+    riskLevel: "Low",
+    volatility: "0.01%",
+    total24hVol: "$18.9M",
+    bestLeverage: "1.0x",
+    bestFixedAPY: "4.50%",
+    depegRisk: "Low",
+  },
+  {
+    asset: "USDC",
+    id: "SV-OPT-007",
+    protocol: "Yearn Finance",
+    chain: "Optimism",
+    stablecoin: "USDC",
+    apy: "6.10%",
+    tvl: "$315M",
+    riskLevel: "Medium",
+    volatility: "0.03%",
+    total24hVol: "$8.4M",
+    bestLeverage: "1.5x",
+    bestFixedAPY: "6.10%",
+    depegRisk: "Low",
+  },
+  {
+    asset: "DAI",
+    id: "SV-ARB-008",
+    protocol: "AAVE V3",
+    chain: "Arbitrum",
+    stablecoin: "DAI",
+    apy: "4.20%",
+    tvl: "$820M",
+    riskLevel: "Low",
+    volatility: "0.02%",
+    total24hVol: "$31.2M",
+    bestLeverage: "1.0x",
+    bestFixedAPY: "4.20%",
+    depegRisk: "Medium",
+  },
+  {
+    asset: "USDC/USDT",
+    id: "SV-ETH-009",
+    protocol: "Ether.fi Cash",
+    chain: "Ethereum",
+    stablecoin: "USDC/USDT",
+    apy: "10.20%",
+    tvl: "$425M",
+    riskLevel: "Medium-High",
+    volatility: "0.05%",
+    total24hVol: "$12.7M",
+    bestLeverage: "2.2x",
+    bestFixedAPY: "10.20%",
+    depegRisk: "Low",
+  },
+  {
+    asset: "USDC",
+    id: "SV-BASE-010",
+    protocol: "Morpho Blue",
+    chain: "Base",
+    stablecoin: "USDC",
+    apy: "7.80%",
+    tvl: "$580M",
+    riskLevel: "Medium",
+    volatility: "0.02%",
+    total24hVol: "$24.6M",
+    bestLeverage: "2.9x",
+    bestFixedAPY: "7.80%",
+    depegRisk: "Low",
   },
 ];
 
-export const CryptoTable = () => {
-  const [cryptos] = useState<CryptoAsset[]>(mockCryptoData);
+interface CryptoTableProps {
+  onProductSelect?: (product: YieldProduct) => void;
+}
 
-  const formatNumber = (num: number) => {
-    if (num >= 1e9) {
-      return `$${(num / 1e9).toFixed(2)}B`;
+export const CryptoTable = ({ onProductSelect }: CryptoTableProps) => {
+  const [products] = useState<YieldProduct[]>(mockYieldData);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  const handleRowClick = (product: YieldProduct) => {
+    setSelectedProductId(product.id);
+    if (onProductSelect) {
+      onProductSelect(product);
     }
-    if (num >= 1e6) {
-      return `$${(num / 1e6).toFixed(2)}M`;
-    }
-    return `$${num.toLocaleString()}`;
+  };
+
+  const getRiskColor = (riskLevel: string) => {
+    if (riskLevel.toLowerCase().includes("low")) return "text-green-500";
+    if (riskLevel.toLowerCase().includes("high")) return "text-red-500";
+    return "text-yellow-500";
   };
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground">Top Cryptocurrencies</h2>
+        <h2 className="text-xl font-semibold text-foreground">Yield Products</h2>
+        <p className="text-sm text-muted-foreground mt-1">Click on a product to view details</p>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">#</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Name</th>
-              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Price</th>
-              <th className="text-right p-4 text-sm font-medium text-muted-foreground">24h %</th>
-              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Market Cap</th>
-              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Volume (24h)</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Asset</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">ID</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Protocol</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Chain</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Stablecoin</th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">APY</th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">TVL</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Risk Level</th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Volatility</th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">24h Vol</th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">Leverage</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Depeg Risk</th>
             </tr>
           </thead>
           <tbody>
-            {cryptos.map((crypto) => (
+            {products.map((product) => (
               <tr
-                key={crypto.id}
-                className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                key={product.id}
+                onClick={() => handleRowClick(product)}
+                className={`border-t border-border hover:bg-primary/10 transition-colors cursor-pointer ${
+                  selectedProductId === product.id ? "bg-primary/20" : ""
+                }`}
               >
-                <td className="p-4 text-sm text-muted-foreground">{crypto.id}</td>
                 <td className="p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-xs font-bold text-primary">
-                        {crypto.symbol.charAt(0)}
+                        {product.asset.charAt(0)}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{crypto.name}</p>
-                      <p className="text-xs text-muted-foreground">{crypto.symbol}</p>
-                    </div>
+                    <span className="font-medium text-foreground">{product.asset}</span>
                   </div>
                 </td>
-                <td className="p-4 text-right font-medium text-foreground">
-                  ${crypto.price.toLocaleString()}
-                </td>
-                <td className="p-4 text-right">
-                  <span
-                    className={`font-medium ${
-                      crypto.change24h >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {crypto.change24h >= 0 ? "+" : ""}
-                    {crypto.change24h.toFixed(2)}%
+                <td className="p-4 text-sm text-muted-foreground">{product.id}</td>
+                <td className="p-4 text-sm text-foreground">{product.protocol}</td>
+                <td className="p-4 text-sm text-muted-foreground">{product.chain}</td>
+                <td className="p-4 text-sm text-muted-foreground">{product.stablecoin}</td>
+                <td className="p-4 text-right font-medium text-green-500">{product.apy}</td>
+                <td className="p-4 text-right text-muted-foreground">{product.tvl}</td>
+                <td className="p-4 text-sm">
+                  <span className={`font-medium ${getRiskColor(product.riskLevel)}`}>
+                    {product.riskLevel}
                   </span>
                 </td>
-                <td className="p-4 text-right text-muted-foreground">
-                  {formatNumber(crypto.marketCap)}
-                </td>
-                <td className="p-4 text-right text-muted-foreground">
-                  {formatNumber(crypto.volume24h)}
+                <td className="p-4 text-right text-sm text-muted-foreground">{product.volatility}</td>
+                <td className="p-4 text-right text-sm text-muted-foreground">{product.total24hVol}</td>
+                <td className="p-4 text-right text-sm font-medium text-primary">{product.bestLeverage}</td>
+                <td className="p-4 text-sm">
+                  <span className={`font-medium ${getRiskColor(product.depegRisk)}`}>
+                    {product.depegRisk}
+                  </span>
                 </td>
               </tr>
             ))}
