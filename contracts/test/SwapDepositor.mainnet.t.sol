@@ -58,8 +58,12 @@ contract SwapDepositorMainnetTest is BaseTest {
     address liquidityProvider = address(0xCAFE);
 
     function setUp() public {
-        uint256 forkBlock = vm.envOr("FORK_BLOCK_NUMBER", block.number);
-        vm.createSelectFork(vm.rpcUrl("base"), forkBlock);
+        // Fork at specified block or latest if not specified
+        try vm.envUint("FORK_BLOCK_NUMBER") returns (uint256 forkBlock) {
+            vm.createSelectFork(vm.rpcUrl("base"), forkBlock);
+        } catch {
+            vm.createSelectFork(vm.rpcUrl("base"));
+        }
 
         console2.log("Forked Base mainnet at block:", block.number);
 
@@ -108,17 +112,10 @@ contract SwapDepositorMainnetTest is BaseTest {
     }
 
     function _setupLiquidityProvider() internal {
-        // Fund liquidity provider from whale addresses
-        address usdcWhale = BaseConstants.USDC_WHALE;
-        address usdbcWhale = BaseConstants.USDbC_WHALE;
-
-        // Get USDC from whale
-        vm.prank(usdcWhale);
-        usdc.transfer(liquidityProvider, 1000000e6); // 1M USDC
-
-        // Get USDbC from whale
-        vm.prank(usdbcWhale);
-        usdbc.transfer(liquidityProvider, 1000000e6); // 1M USDbC
+        // Use deal to fund liquidity provider with tokens
+        // This is more reliable than using whale addresses which may change
+        deal(address(usdc), liquidityProvider, 1000000e6); // 1M USDC
+        deal(address(usdbc), liquidityProvider, 1000000e6); // 1M USDbC
 
         console2.log("Funded liquidity provider");
         console2.log("  USDC balance:", usdc.balanceOf(liquidityProvider));
@@ -138,7 +135,8 @@ contract SwapDepositorMainnetTest is BaseTest {
         tickLower = TickMath.minUsableTick(poolKey.tickSpacing);
         tickUpper = TickMath.maxUsableTick(poolKey.tickSpacing);
 
-        uint128 liquidityAmount = uint128(vm.envOr("LIQUIDITY_AMOUNT", uint256(10e18)));
+        // Use smaller liquidity amount for 6-decimal tokens (USDC/USDbC)
+        uint128 liquidityAmount = uint128(vm.envOr("LIQUIDITY_AMOUNT", uint256(10e6)));
 
         (uint256 amount0Expected, uint256 amount1Expected) = LiquidityAmounts.getAmountsForLiquidity(
             Constants.SQRT_PRICE_1_1,
@@ -169,18 +167,23 @@ contract SwapDepositorMainnetTest is BaseTest {
     }
 
     function _setupTestUser() internal {
-        // Fund user from whale
-        address usdcWhale = BaseConstants.USDC_WHALE;
+        // Use deal to fund test user with tokens
+        deal(address(usdc), user, 100000e6); // 100k USDC
 
-        vm.prank(usdcWhale);
-        usdc.transfer(user, 100000e6); // 100k USDC
-
-        // Approve for swapping
+        // Approve for swapping - need both direct approvals and Permit2
         vm.startPrank(user);
+        // Direct ERC20 approvals (needed for proxy tokens like USDC)
+        IERC20(Currency.unwrap(currency0)).approve(address(poolManager), type(uint256).max);
+        IERC20(Currency.unwrap(currency1)).approve(address(poolManager), type(uint256).max);
+        IERC20(Currency.unwrap(currency0)).approve(address(swapRouter), type(uint256).max);
+        IERC20(Currency.unwrap(currency1)).approve(address(swapRouter), type(uint256).max);
+        // Permit2 approvals
         IERC20(Currency.unwrap(currency0)).approve(address(permit2), type(uint256).max);
         IERC20(Currency.unwrap(currency1)).approve(address(permit2), type(uint256).max);
         permit2.approve(Currency.unwrap(currency0), address(swapRouter), type(uint160).max, type(uint48).max);
         permit2.approve(Currency.unwrap(currency1), address(swapRouter), type(uint160).max, type(uint48).max);
+        permit2.approve(Currency.unwrap(currency0), address(poolManager), type(uint160).max, type(uint48).max);
+        permit2.approve(Currency.unwrap(currency1), address(poolManager), type(uint160).max, type(uint48).max);
         vm.stopPrank();
 
         console2.log("Funded test user with USDC:", usdc.balanceOf(user));
@@ -288,7 +291,7 @@ contract SwapDepositorMainnetTest is BaseTest {
         assertEq(token0.balanceOf(address(hook)), 0, "Hook should not hold token0");
         assertEq(token1.balanceOf(address(hook)), 0, "Hook should not hold token1");
 
-        console2.log("✓ Swap successfully deposited to Aave V3 on Base mainnet");
+        console2.log("[OK] Swap successfully deposited to Aave V3 on Base mainnet");
     }
 
     function testMainnetForkMultipleSwapsWithAaveDeposit() public {
@@ -338,9 +341,8 @@ contract SwapDepositorMainnetTest is BaseTest {
     function testMainnetForkSwapReverseDirection() public {
         console2.log("\n=== Testing reverse swap with Aave deposit ===");
 
-        // First, get some token1 for the user
-        vm.prank(BaseConstants.USDbC_WHALE);
-        usdbc.transfer(user, 10000e6); // 10k USDbC
+        // Fund user with token1 (USDbC) using deal
+        deal(address(usdbc), user, 10000e6); // 10k USDbC
 
         vm.startPrank(user);
 
@@ -389,6 +391,6 @@ contract SwapDepositorMainnetTest is BaseTest {
         assertEq(token0After, token0Before, "User should not receive token0 directly");
         assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aToken0 from Aave");
 
-        console2.log("✓ Reverse swap successfully deposited to Aave");
+        console2.log("[OK] Reverse swap successfully deposited to Aave");
     }
 }
