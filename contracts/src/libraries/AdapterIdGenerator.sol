@@ -34,9 +34,9 @@ library AdapterIdGenerator {
     }
 
     /// @notice Generates a standardized adapter ID with a custom domain suffix
-    /// @dev Format: SYMBOL:BLOCKCHAIN:WORD-WORD.domain (e.g., "USDC:BASE:swift-fox.adapters.eth")
+    /// @dev Format: SYMBOL:BLOCKCHAIN:WORD-WORD.domain (e.g., "USDC:BASE:swift-fox.base.eth")
     /// @param metadata The adapter metadata containing symbol, chainId, and protocolAddress
-    /// @param domain The domain suffix to append (e.g., "adapters.eth")
+    /// @param domain The domain suffix to append (e.g., "base.eth" or "eth")
     /// @return fullId The full adapter ID with domain
     function generateAdapterIdWithDomain(
         ILendingAdapter.AdapterMetadata memory metadata,
@@ -49,7 +49,7 @@ library AdapterIdGenerator {
     /// @notice Generates an ENS namehash for the adapter ID
     /// @dev Useful for registering the adapter in ENS
     /// @param metadata The adapter metadata
-    /// @param domain The ENS domain to use (e.g., "adapters.eth")
+    /// @param domain The ENS domain to use (e.g., "base.eth" or "eth")
     /// @return node The ENS namehash (bytes32)
     function generateENSNode(
         ILendingAdapter.AdapterMetadata memory metadata,

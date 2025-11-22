@@ -1,8 +1,34 @@
-# Uniswap v4 Hook Template
+# SwapDepositor - Uniswap V4 Hook with Aave Integration
 
-**A template for writing Uniswap v4 Hooks 🦄**
+**A Uniswap V4 hook that automatically deposits swap outputs to Aave V3 🦄**
 
-### Get Started
+## 🎉 Live on Base Sepolia!
+
+All contracts are deployed and verified on Base Sepolia testnet. See [DEPLOYED_ADDRESSES.md](DEPLOYED_ADDRESSES.md) for full details.
+
+### Quick Links
+- **AdapterRegistry**: [`0x045B9a7505164B418A309EdCf9A45EB1fE382951`](https://sepolia.basescan.org/address/0x045B9a7505164B418A309EdCf9A45EB1fE382951)
+- **SwapDepositor Hook**: [`0xa97800be965c982c381E161124A16f5450C080c4`](https://sepolia.basescan.org/address/0xa97800be965c982c381E161124A16f5450C080c4)
+- **USDC Adapter**: [`0x3903D3A1d5F18925ac9c76F2dC52d1447B1AbfCF`](https://sepolia.basescan.org/address/0x3903D3A1d5F18925ac9c76F2dC52d1447B1AbfCF)
+- **USDT Adapter**: [`0x5531bc190eC0C74dC8694176Ad849277AbA21a5D`](https://sepolia.basescan.org/address/0x5531bc190eC0C74dC8694176Ad849277AbA21a5D)
+
+## Features
+
+✨ **ENS-Based Adapter Resolution** - Reference adapters by human-readable names like `USDC:BASE_SEPOLIA:word-word.base.eth`
+🔄 **Automatic Aave Deposits** - Swap outputs are automatically deposited to Aave V3
+📝 **Adapter Registry** - Central registry for discovering and managing lending adapters
+🎯 **Multi-Protocol Support** - Extensible adapter system supports any lending protocol
+🔐 **Basename Support** - Recipients can use Basenames (e.g., `alice.base.eth`)
+
+## How It Works
+
+1. **Swap**: User performs a Uniswap V4 swap
+2. **Hook Intercepts**: SwapDepositor hook intercepts the swap output
+3. **Resolve Adapter**: Hook resolves the adapter ENS name to get the contract address
+4. **Deposit**: Adapter deposits tokens to Aave on behalf of the recipient
+5. **Earn**: Recipient receives aTokens and starts earning yield
+
+## Get Started
 
 This template provides a starting point for writing Uniswap v4 Hooks, including a simple example and preconfigured test environment. Start by creating a new repository using the "Use this template" button at the top right of this page. Alternatively you can also click this link:
 

@@ -32,12 +32,12 @@ contract RegisterAdapterScript is Script {
         // Output example: "USDC:BASE:swift-fox" (word pair is deterministic based on adapter address)
 
         // Generate full ENS name
-        string memory ensName = AdapterIdGenerator.generateAdapterIdWithDomain(metadata, "adapters.eth");
+        string memory ensName = AdapterIdGenerator.generateAdapterIdWithDomain(metadata, "base.eth");
         console2.log("ENS Name:", ensName);
-        // Output example: "USDC:BASE:swift-fox.adapters.eth"
+        // Output example: "USDC:BASE:swift-fox.base.eth"
 
         // Generate ENS namehash for registration
-        bytes32 ensNode = AdapterIdGenerator.generateENSNode(metadata, "adapters.eth");
+        bytes32 ensNode = AdapterIdGenerator.generateENSNode(metadata, "base.eth");
         console2.log("ENS Node (namehash):");
         console2.logBytes32(ensNode);
 
@@ -84,7 +84,7 @@ contract RegisterAdapterScript is Script {
         console2.log("5. Set the resolver to point to your adapter contract address");
         console2.log("\nThis ensures all adapters follow a consistent naming convention:");
         console2.log("SYMBOL:BLOCKCHAIN:WORD-WORD.domain");
-        console2.log("Example: USDC:BASE:swift-fox.adapters.eth");
+        console2.log("Example: USDC:BASE:swift-fox.base.eth");
         console2.log("\nThe word pairs are:");
         console2.log("- Deterministic (same adapter address = same words)");
         console2.log("- Human-friendly (easy to remember and communicate)");
