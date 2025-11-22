@@ -53,7 +53,7 @@ export const DashboardHeader = () => {
               disabled={!ready}
               className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Connect Wallet
+              Login
             </button>
           )}
         </div>
