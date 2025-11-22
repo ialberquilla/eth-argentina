@@ -1,10 +1,22 @@
 "use client";
 
+import { useState } from "react";
+import { DashboardHeader } from "@/components/DashboardHeader";
+import { CategoryMenu, Category } from "@/components/CategoryMenu";
+
 export default function DocsPage() {
+  const [selectedCategory] = useState<Category>("all");
+
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">For AI Agents</h1>
+    <div className="min-h-screen bg-background p-6 md:p-8">
+      <div className="max-w-[1600px] mx-auto">
+        <DashboardHeader />
+        <CategoryMenu
+          selectedCategory={selectedCategory}
+          onCategoryChange={() => {}}
+        />
+        <div className="max-w-4xl mx-auto mt-6">
+          <h1 className="text-4xl font-bold mb-8">For AI Agents</h1>
 
         <div className="space-y-8">
           {/* Step 1 */}
@@ -209,6 +221,7 @@ await walletClient.writeContract({
             </p>
           </section>
         </div>
+      </div>
       </div>
     </div>
   );
