@@ -18,16 +18,18 @@ contract RegisterAdapterScript is Script {
         console2.log("\n=== Example 1: Generating ID for Aave USDC Adapter on Base ===");
 
         // Simulate getting metadata from a deployed adapter
+        // NOTE: In production, the protocolAddress should be the adapter's address (address(this))
+        // This example uses a placeholder address to demonstrate the concept
         ILendingAdapter.AdapterMetadata memory metadata = ILendingAdapter.AdapterMetadata({
             symbol: "USDC",
             chainId: 8453, // Base mainnet
-            protocolAddress: 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5 // Aave Pool on Base
+            protocolAddress: 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5 // Example adapter address
         });
 
         // Generate the standardized adapter ID
         string memory adapterId = AdapterIdGenerator.generateAdapterId(metadata);
         console2.log("Adapter ID:", adapterId);
-        // Output example: "USDC:BASE:swift-fox" (word pair is deterministic)
+        // Output example: "USDC:BASE:swift-fox" (word pair is deterministic based on adapter address)
 
         // Generate full ENS name
         string memory ensName = AdapterIdGenerator.generateAdapterIdWithDomain(metadata, "adapters.eth");
@@ -45,7 +47,7 @@ contract RegisterAdapterScript is Script {
         ILendingAdapter.AdapterMetadata memory ethMetadata = ILendingAdapter.AdapterMetadata({
             symbol: "DAI",
             chainId: 1,
-            protocolAddress: 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2 // Aave V3 Pool on Ethereum
+            protocolAddress: 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2 // Example adapter address
         });
         console2.log("Ethereum:", AdapterIdGenerator.generateAdapterId(ethMetadata));
 
@@ -53,7 +55,7 @@ contract RegisterAdapterScript is Script {
         ILendingAdapter.AdapterMetadata memory arbMetadata = ILendingAdapter.AdapterMetadata({
             symbol: "WETH",
             chainId: 42161,
-            protocolAddress: 0x794a61358D6845594F94dc1DB02A252b5b4814aD // Aave V3 Pool on Arbitrum
+            protocolAddress: 0x794a61358D6845594F94dc1DB02A252b5b4814aD // Example adapter address
         });
         console2.log("Arbitrum:", AdapterIdGenerator.generateAdapterId(arbMetadata));
 
@@ -61,7 +63,7 @@ contract RegisterAdapterScript is Script {
         ILendingAdapter.AdapterMetadata memory opMetadata = ILendingAdapter.AdapterMetadata({
             symbol: "USDT",
             chainId: 10,
-            protocolAddress: 0x794a61358D6845594F94dc1DB02A252b5b4814aD // Aave V3 Pool on Optimism
+            protocolAddress: 0x794a61358D6845594F94dc1DB02A252b5b4814aD // Example adapter address
         });
         console2.log("Optimism:", AdapterIdGenerator.generateAdapterId(opMetadata));
 
@@ -84,8 +86,11 @@ contract RegisterAdapterScript is Script {
         console2.log("SYMBOL:BLOCKCHAIN:WORD-WORD.domain");
         console2.log("Example: USDC:BASE:swift-fox.adapters.eth");
         console2.log("\nThe word pairs are:");
-        console2.log("- Deterministic (same address = same words)");
+        console2.log("- Deterministic (same adapter address = same words)");
         console2.log("- Human-friendly (easy to remember and communicate)");
-        console2.log("- Unique (4,096 combinations from 64 adjectives x 64 nouns)");
+        console2.log("- Unique per adapter (derived from adapter's contract address)");
+        console2.log("- 4,096 possible combinations (64 adjectives x 64 nouns)");
+        console2.log("\nIMPORTANT: The adapter's getAdapterMetadata() returns address(this),");
+        console2.log("ensuring each deployed adapter instance gets a unique identifier.");
     }
 }
