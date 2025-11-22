@@ -6,6 +6,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **Arc Blockchain Support**: Full integration with Circle's Arc blockchain (testnet and mainnet)
 - **viem Integration**: Latest viem version for blockchain interactions
 - **Multi-chain Support**: Arc, Base, Ethereum, Arbitrum, Polygon, and Optimism
+- **Agent-Friendly API**: RESTful API for AI agents to discover and invest in DeFi vaults programmatically
 
 ## Getting Started
 
@@ -101,3 +102,77 @@ The default chain is set to Arc Testnet. You can modify this in `src/lib/privy-c
 - Arbitrum One
 - Polygon PoS
 - Optimism
+
+## Agent-Friendly API
+
+This platform exposes a simple RESTful API that enables AI agents to:
+- **Discover** DeFi yield products across multiple protocols and chains
+- **Execute** swaps that automatically deposit into yield positions
+- **Manage** investments using only USDC - no complex token management
+
+### Quick Start for AI Agents
+
+```bash
+# 1. Discover available vaults
+GET /api/vaults?network=Base&minApy=4
+
+# 2. Get adapter registry information
+GET /api/registry?symbol=USDC
+
+# 3. Execute swap with auto-deposit to lending protocol
+POST /api/swap
+{
+  "vaultId": "SV-BASE-001",
+  "amountIn": "1000000",
+  "recipient": "0xYourAddress"
+}
+```
+
+### Key Benefits for Agents
+
+1. **Single Currency**: Hold only USDC to access all vaults across all protocols
+2. **One Transaction**: Swap and deposit happen atomically via Uniswap V4 hooks
+3. **Automatic Protocol Integration**: Platform handles Aave, Compound, Morpho, etc.
+4. **Risk Assessment**: Comprehensive risk metrics including smart contract scores and exploit history
+5. **Cross-Chain Support**: Unified interface across Base, Ethereum, Arbitrum, and more
+
+### Architecture
+
+The platform uses a Uniswap V4 hook architecture:
+
+- **AdapterRegistry**: Central registry for lending protocol adapters
+- **SwapDepositor Hook**: Intercepts swap outputs and deposits to lending protocols
+- **Lending Adapters**: Protocol-specific adapters for Aave, Compound, etc.
+
+When an agent executes a swap, the hook automatically:
+1. Resolves the adapter from the registry using ENS-style names
+2. Intercepts the swap output tokens
+3. Deposits to the lending protocol
+4. Returns yield-bearing tokens (e.g., aUSDC) to the recipient
+
+### Documentation
+
+For complete API documentation, examples, and integration guides, see:
+- **[Agent API Documentation](docs/AGENT_API.md)** - Complete guide for AI agents
+- **[Contract Documentation](../contracts/README.md)** - Smart contract details
+- **[Deployed Addresses](../contracts/DEPLOYED_ADDRESSES.md)** - Contract addresses and network info
+
+### Example Workflow
+
+```python
+import requests
+
+# Discover best vault
+vaults = requests.get("/api/vaults?network=Base&riskLevel=Low").json()
+best_vault = max(vaults["vaults"], key=lambda v: v["apy"])
+
+# Execute investment
+swap_data = requests.post("/api/swap", json={
+    "vaultId": best_vault["id"],
+    "amountIn": "1000000",  # 1 USDC
+    "recipient": "0xYourAddress"
+}).json()
+
+# Transaction details provided in swap_data
+# Agent receives yield-bearing tokens automatically
+```
