@@ -2,12 +2,21 @@
 bytecode_hash = "none"
 evm_version = "cancun"
 ffi = true
-fs_permissions = [{access = "read-write", path = ".forge-snapshots/"}]
+fs_permissions = [{access = "read-write", path = ".forge-snapshots/"}, {access = "read", path = "out/"}]
 libs = ["lib"]
 out = "out"
 solc_version = "0.8.30"
 src = "src"
 via_ir = false
+
+# RPC endpoints for forking
+[rpc_endpoints]
+base = "${BASE_RPC_URL}"
+
+# Fork testing configuration
+[fork]
+url = "${RPC_URL}"
+block_number = 22000000
 
 [lint]
 exclude_lints = ["screaming-snake-case-immutable", "screaming-snake-case-const"]
