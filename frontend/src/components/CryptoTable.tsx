@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-interface CryptoAsset {
+export interface CryptoAsset {
   id: number;
   name: string;
   symbol: string;
@@ -60,7 +60,12 @@ const mockCryptoData: CryptoAsset[] = [
   },
 ];
 
-export const CryptoTable = () => {
+interface CryptoTableProps {
+  selectedCryptoId: number | null;
+  onSelectCrypto: (crypto: CryptoAsset) => void;
+}
+
+export const CryptoTable = ({ selectedCryptoId, onSelectCrypto }: CryptoTableProps) => {
   const [cryptos] = useState<CryptoAsset[]>(mockCryptoData);
 
   const formatNumber = (num: number) => {
@@ -92,10 +97,17 @@ export const CryptoTable = () => {
             </tr>
           </thead>
           <tbody>
-            {cryptos.map((crypto) => (
+            {cryptos.map((crypto) => {
+              const isSelected = crypto.id === selectedCryptoId;
+              return (
               <tr
                 key={crypto.id}
-                className="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => onSelectCrypto(crypto)}
+                className={`border-t border-border transition-colors cursor-pointer ${
+                  isSelected
+                    ? "bg-primary/10 hover:bg-primary/15 border-l-4 border-l-primary"
+                    : "hover:bg-muted/30"
+                }`}
               >
                 <td className="p-4 text-sm text-muted-foreground">{crypto.id}</td>
                 <td className="p-4">
@@ -131,7 +143,8 @@ export const CryptoTable = () => {
                   {formatNumber(crypto.volume24h)}
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
