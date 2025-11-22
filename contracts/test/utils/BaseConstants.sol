@@ -7,6 +7,12 @@ library BaseConstants {
     // ============ Aave V3 Addresses ============
     address constant AAVE_V3_POOL = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5;
 
+    // ============ Compound V3 Addresses ============
+    address constant COMPOUND_V3_USDC = 0xb125E6687d4313864e53df431d5425969c15Eb2F;
+
+    // ============ Morpho Blue Addresses ============
+    address constant MORPHO_BLUE = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
+
     // ============ Uniswap V4 Addresses ============
     // Note: These addresses will need to be updated once Uniswap V4 is deployed on Base
     // For now, we'll use placeholder addresses that can be overridden in tests
