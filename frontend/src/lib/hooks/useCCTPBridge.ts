@@ -190,6 +190,7 @@ export function useCCTPBridge() {
           abi: USDC_ABI,
           functionName: "approve",
           args: [sourceConfig.tokenMessenger as `0x${string}`, amount],
+          chain: null,
         });
 
         setBridgeStatus("Waiting for approval confirmation...");
@@ -216,6 +217,7 @@ export function useCCTPBridge() {
           mintRecipient,
           sourceConfig.usdc as `0x${string}`,
         ],
+        chain: null,
       });
 
       setBridgeStatus("Waiting for transaction confirmation...");
@@ -307,6 +309,7 @@ export function useCCTPBridge() {
         abi: MESSAGE_TRANSMITTER_ABI,
         functionName: "receiveMessage",
         args: [messageHash as `0x${string}`, attestation as `0x${string}`],
+        chain: null,
       });
 
       setBridgeStatus("Bridge completed successfully!");
