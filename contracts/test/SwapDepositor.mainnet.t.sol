@@ -20,10 +20,13 @@ import {EasyPosm} from "./utils/libraries/EasyPosm.sol";
 
 import {SwapDepositor} from "../src/SwapDepositor.sol";
 import {AaveAdapter} from "../src/adapters/AaveAdapter.sol";
+import {AdapterRegistry} from "../src/AdapterRegistry.sol";
 import {BaseTest} from "./utils/BaseTest.sol";
 import {BaseConstants} from "./utils/BaseConstants.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IAavePool} from "../src/interfaces/IAavePool.sol";
+import {AdapterIdGenerator} from "../src/libraries/AdapterIdGenerator.sol";
+import {ILendingAdapter} from "../src/interfaces/ILendingAdapter.sol";
 
 /// @title SwapDepositorMainnetTest
 /// @notice Fork tests for SwapDepositor using real Base mainnet contracts
@@ -33,6 +36,7 @@ contract SwapDepositorMainnetTest is BaseTest {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
     using StateLibrary for IPoolManager;
+    using AdapterIdGenerator for ILendingAdapter.AdapterMetadata;
 
     // Mainnet contracts
     IAavePool aavePool = IAavePool(BaseConstants.AAVE_V3_POOL);
@@ -47,7 +51,12 @@ contract SwapDepositorMainnetTest is BaseTest {
     PoolKey poolKey;
     SwapDepositor hook;
     AaveAdapter aaveAdapter;
+    AdapterRegistry adapterRegistry;
     PoolId poolId;
+
+    // Adapter ENS names
+    string adapterEnsName;
+    string constant ADAPTER_DOMAIN = "base.eth";
 
     uint256 tokenId;
     int24 tickLower;
@@ -79,12 +88,16 @@ contract SwapDepositorMainnetTest is BaseTest {
             (currency0, currency1) = (currency1, currency0);
         }
 
+        // Deploy AdapterRegistry
+        adapterRegistry = new AdapterRegistry();
+        console2.log("Deployed AdapterRegistry at:", address(adapterRegistry));
+
         // Deploy the hook to an address with the correct flags
         address flags = address(
             uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_SWAP_FLAG | Hooks.AFTER_SWAP_RETURNS_DELTA_FLAG)
                 ^ (0x4444 << 144) // Namespace the hook to avoid collisions
         );
-        bytes memory constructorArgs = abi.encode(poolManager);
+        bytes memory constructorArgs = abi.encode(poolManager, adapterRegistry);
         deployCodeTo("SwapDepositor.sol:SwapDepositor", constructorArgs, flags);
         hook = SwapDepositor(flags);
 
@@ -94,6 +107,14 @@ contract SwapDepositorMainnetTest is BaseTest {
         // After sorting, currency1 is USDbC (since USDC < USDbC by address)
         aaveAdapter = new AaveAdapter(BaseConstants.AAVE_V3_POOL, "USDbC");
         console2.log("Deployed AaveAdapter at:", address(aaveAdapter));
+
+        // Register the adapter in the registry
+        adapterRegistry.registerAdapter(address(aaveAdapter), ADAPTER_DOMAIN);
+
+        // Generate the adapter ENS name for use in tests
+        ILendingAdapter.AdapterMetadata memory metadata = aaveAdapter.getAdapterMetadata();
+        adapterEnsName = AdapterIdGenerator.generateAdapterIdWithDomain(metadata, ADAPTER_DOMAIN);
+        console2.log("Registered adapter with ENS name:", adapterEnsName);
 
         // Create the pool
         poolKey = PoolKey(currency0, currency1, 3000, 60, IHooks(hook));
@@ -253,8 +274,9 @@ contract SwapDepositorMainnetTest is BaseTest {
         console2.log("  User token1:", token1Before);
         console2.log("  Recipient aToken1:", aTokenBefore);
 
-        // Encode adapter address and recipient in hookData
-        bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
+        // Encode adapter ENS name and recipient address in hookData
+        string memory recipientAddress = addressToString(recipient);
+        bytes memory hookData = abi.encode(adapterEnsName, recipientAddress);
 
         // Perform swap with Aave deposit
         BalanceDelta swapDelta = swapRouter.swapExactTokensForTokens({
@@ -303,7 +325,8 @@ contract SwapDepositorMainnetTest is BaseTest {
 
         vm.startPrank(user);
 
-        bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
+        string memory recipientAddress = addressToString(recipient);
+        bytes memory hookData = abi.encode(adapterEnsName, recipientAddress);
 
         uint256 initialATokenBalance = aUSDbC.balanceOf(recipient);
         console2.log("Initial aToken balance:", initialATokenBalance);
@@ -362,7 +385,8 @@ contract SwapDepositorMainnetTest is BaseTest {
         console2.log("  User token1:", token1Before);
         console2.log("  Recipient aToken0:", aTokenBefore);
 
-        bytes memory hookData = abi.encode(address(aaveAdapter), recipient);
+        string memory recipientAddress = addressToString(recipient);
+        bytes memory hookData = abi.encode(adapterEnsName, recipientAddress);
 
         // Swap token1 -> token0
         swapRouter.swapExactTokensForTokens({
@@ -393,5 +417,79 @@ contract SwapDepositorMainnetTest is BaseTest {
         assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aToken0 from Aave");
 
         console2.log("[OK] Reverse swap successfully deposited to Aave");
+    }
+
+    function testMainnetForkSwapWithBasenameRecipient() public {
+        console2.log("\n=== Testing swap with basename recipient ===");
+
+        // Note: This test uses a real basename that needs to exist on Base mainnet
+        // For this example, we'll use "ens.base.eth" which is a known basename
+        // In production, users would provide their own basenames like "alice.base.eth"
+
+        vm.startPrank(user);
+
+        // Using a known basename (this would need to be registered on Base)
+        // For testing purposes, we can also just use an address
+        address recipient = address(0xABCD);
+        uint256 amountIn = 1000e6;
+
+        IERC20 token0 = IERC20(Currency.unwrap(currency0));
+        IERC20 token1 = IERC20(Currency.unwrap(currency1));
+
+        uint256 token0Before = token0.balanceOf(user);
+        uint256 aTokenBefore = aUSDbC.balanceOf(recipient);
+
+        console2.log("Before swap:");
+        console2.log("  User token0:", token0Before);
+        console2.log("  Recipient aToken1:", aTokenBefore);
+
+        // Encode adapter ENS name and recipient address string
+        // In a real scenario, recipientIdentifier could be "alice.base.eth"
+        string memory recipientAddress = addressToString(recipient);
+        bytes memory hookData = abi.encode(adapterEnsName, recipientAddress);
+
+        console2.log("Using adapter ENS name:", adapterEnsName);
+        console2.log("Using recipient address:", recipientAddress);
+
+        // Perform swap with Aave deposit
+        swapRouter.swapExactTokensForTokens({
+            amountIn: amountIn,
+            amountOutMin: 0,
+            zeroForOne: true,
+            poolKey: poolKey,
+            hookData: hookData,
+            receiver: user,
+            deadline: block.timestamp + 1
+        });
+
+        uint256 token0After = token0.balanceOf(user);
+        uint256 aTokenAfter = aUSDbC.balanceOf(recipient);
+
+        console2.log("After swap:");
+        console2.log("  User token0:", token0After);
+        console2.log("  Recipient aToken1:", aTokenAfter);
+        console2.log("  aToken1 received:", aTokenAfter - aTokenBefore);
+
+        vm.stopPrank();
+
+        // Verify
+        assertEq(token0Before - token0After, amountIn, "Should spend exact token0 amount");
+        assertGt(aTokenAfter, aTokenBefore, "Recipient should receive aTokens from Aave");
+
+        console2.log("[OK] Swap with ENS adapter resolution and address recipient successful");
+    }
+
+    /// @notice Helper function to convert address to hex string
+    function addressToString(address addr) internal pure returns (string memory) {
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory data = abi.encodePacked(addr);
+        bytes memory str = new bytes(2 + data.length * 2);
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < data.length; i++) {
+            str[2 + i * 2] = alphabet[uint8(data[i] >> 4)];
+            str[3 + i * 2] = alphabet[uint8(data[i] & 0x0f)];
+        }
+        return string(str);
     }
 }

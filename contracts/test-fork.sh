@@ -1,6 +1,15 @@
 #!/bin/bash
 
 # Script to run Base mainnet fork tests for SwapDepositor
+#
+# This test demonstrates the complete adapter registration flow:
+# 1. Deploy AdapterRegistry contract
+# 2. Deploy AaveAdapter with symbol (e.g., "USDbC")
+# 3. Register adapter in registry (generates ENS name like "USDBC:BASE:word-word.adapters.eth")
+# 4. Perform swaps using the adapter ENS name instead of address
+# 5. Hook resolves ENS name to adapter address on-chain
+# 6. Hook calls adapter to deposit tokens to Aave
+#
 # Usage: ./test-fork.sh [test_name]
 # Example: ./test-fork.sh testMainnetForkSwapWithAaveDeposit
 
@@ -14,10 +23,15 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}Running Base Mainnet Fork Tests${NC}"
 echo "================================"
 
+# Source .env file if it exists
+if [ -f .env ]; then
+    source .env
+fi
+
 # Check if RPC URL is set
 if [ -z "$BASE_RPC_URL" ]; then
     echo "❌ BASE_RPC_URL not set"
-    echo "Please set BASE_RPC_URL environment variable"
+    echo "Please set BASE_RPC_URL environment variable or add it to .env file"
     echo "Example: export BASE_RPC_URL=https://mainnet.base.org"
     exit 1
 fi
