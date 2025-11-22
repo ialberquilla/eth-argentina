@@ -59,4 +59,37 @@ contract AdapterRegistryTest is Test {
         assertEq(registry.resolveAdapter(ensName1), address(adapter));
         assertEq(registry.resolveAdapter(ensName2), address(adapter2));
     }
+
+    function testGetAllRegisteredAdapters() public {
+        // Initially should have no adapters
+        assertEq(registry.getRegisteredAdapterCount(), 0, "Should start with 0 adapters");
+
+        // Register first adapter
+        registry.registerAdapter(address(adapter), DOMAIN);
+        assertEq(registry.getRegisteredAdapterCount(), 1, "Should have 1 adapter");
+
+        // Register second adapter
+        AaveAdapter adapter2 = new AaveAdapter(address(0x5678), "DAI");
+        registry.registerAdapter(address(adapter2), DOMAIN);
+        assertEq(registry.getRegisteredAdapterCount(), 2, "Should have 2 adapters");
+
+        // Get all registered adapters
+        AdapterRegistry.AdapterInfo[] memory allAdapters = registry.getAllRegisteredAdapters();
+        assertEq(allAdapters.length, 2, "Should return 2 adapters");
+
+        // Verify first adapter info
+        assertEq(allAdapters[0].adapterAddress, address(adapter), "First adapter address should match");
+        assertEq(allAdapters[0].domain, DOMAIN, "First adapter domain should match");
+        assertTrue(bytes(allAdapters[0].adapterId).length > 0, "First adapter ID should not be empty");
+
+        // Verify second adapter info
+        assertEq(allAdapters[1].adapterAddress, address(adapter2), "Second adapter address should match");
+        assertEq(allAdapters[1].domain, DOMAIN, "Second adapter domain should match");
+        assertTrue(bytes(allAdapters[1].adapterId).length > 0, "Second adapter ID should not be empty");
+    }
+
+    function testGetAllRegisteredAdaptersEmpty() public {
+        AdapterRegistry.AdapterInfo[] memory allAdapters = registry.getAllRegisteredAdapters();
+        assertEq(allAdapters.length, 0, "Should return empty array when no adapters registered");
+    }
 }
