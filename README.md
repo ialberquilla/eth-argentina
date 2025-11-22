@@ -36,46 +36,29 @@ Foundry-based Solidity contracts:
 - Comprehensive risk metrics and analytics
 
 ### For AI Agents
-- **Direct Contract Interaction**: Query AdapterRegistry and call swap with your wallet
-- **Single Transaction**: Swap and deposit atomically via Uniswap V4 hooks
-- **USDC Only**: No complex token management
-- **On-Chain Discovery**: Query contracts to discover products and APYs
-- **Complete Documentation**: See [`frontend/docs/AGENT_GUIDE.md`](frontend/docs/AGENT_GUIDE.md)
+- **Get Products**: Call `getAllRegisteredAdapters()` to see all available yield products
+- **Buy with USDC**: Call `swap()` with the product's unique ID to buy
+- **One Transaction**: Automatically receive yield-bearing tokens
+- **Complete Documentation**: See [`docs/FOR_AGENTS.md`](docs/FOR_AGENTS.md)
 
 ## Quick Start for AI Agents
 
 ```javascript
-import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+// Step 1: Get all available products
+const products = await contract.call('getAllRegisteredAdapters');
+// Returns: [{ adapterId: "USDC:BASE_SEPOLIA:word-word.base.eth", ... }, ...]
 
-const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http('https://sepolia.base.org')
-});
-
-// 1. Discover available adapters from registry
-const adapter = await client.readContract({
-  address: '0x045B9a7505164B418A309EdCf9A45EB1fE382951', // AdapterRegistry
-  abi: registryABI,
-  functionName: 'resolveAdapter',
-  args: ['USDC:BASE_SEPOLIA:word-word.base.eth']
-});
-
-// 2. Query APY from Aave
-const reserveData = await client.readContract({
-  address: '0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951', // Aave Pool
-  abi: aavePoolABI,
-  functionName: 'getReserveData',
-  args: ['0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f'] // USDC
-});
-
-// 3. Execute swap with auto-deposit
+// Step 2: Buy a product with USDC
 const hookData = encodeAbiParameters(
-  [{ type: 'string' }, { type: 'address' }],
-  ['USDC:BASE_SEPOLIA:word-word.base.eth', yourAddress]
+  [{ type: 'string' }, { type: 'string' }],
+  [products[0].adapterId, yourAddress]  // adapterId + your address
 );
-// Call swap on Uniswap V4 with this hookData
+
+await swap(poolKey, swapParams, hookData);
+// Done! You receive yield-bearing tokens (e.g., aUSDC)
 ```
+
+See full documentation: [`docs/FOR_AGENTS.md`](docs/FOR_AGENTS.md)
 
 ## How It Works
 
@@ -88,11 +71,11 @@ const hookData = encodeAbiParameters(
 
 ### This Platform
 1. Hold USDC
-2. Query AdapterRegistry to discover products
-3. Call Uniswap V4 `swap()` with hookData containing adapter ENS name
+2. Call `getAllRegisteredAdapters()` to get products with unique IDs
+3. Call `swap()` with the product's unique ID
 4. Receive yield-bearing tokens automatically
 
-All token swaps, approvals, and protocol deposits happen in a single transaction via Uniswap V4 hooks.
+All in one transaction via Uniswap V4 hooks.
 
 ## Smart Contract Architecture
 
@@ -122,9 +105,7 @@ See [`contracts/DEPLOYED_ADDRESSES.md`](contracts/DEPLOYED_ADDRESSES.md) for com
 ## Documentation
 
 ### For AI Agents
-- **[Agent Integration Guide](frontend/docs/AGENT_GUIDE.md)** - Complete guide for direct contract interaction
-- **[Contract Interfaces](frontend/docs/AGENT_GUIDE.md#contract-interfaces)** - ABIs and function signatures
-- **[Example Workflows](frontend/docs/AGENT_GUIDE.md#complete-example-agent-workflow)** - JavaScript and Python examples
+- **[For Agents](docs/FOR_AGENTS.md)** - Simple 2-step guide: get products, buy with USDC
 
 ### For Developers
 - **[Frontend README](frontend/README.md)** - Next.js app setup and configuration
