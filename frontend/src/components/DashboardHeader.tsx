@@ -1,10 +1,11 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useState } from "react";
 
 export const DashboardHeader = () => {
   const { ready, authenticated, login, logout, user } = usePrivy();
+  const { wallets } = useWallets();
   const [copied, setCopied] = useState(false);
 
   // Get user's wallet address or email
@@ -32,7 +33,7 @@ export const DashboardHeader = () => {
   };
 
   const handleCopyAddress = async () => {
-    const walletAddress = user?.wallet?.address;
+    const walletAddress = wallets[0]?.address;
     if (!walletAddress) return;
 
     try {
@@ -44,7 +45,7 @@ export const DashboardHeader = () => {
     }
   };
 
-  const hasWalletAddress = user?.wallet?.address;
+  const hasWalletAddress = wallets && wallets.length > 0 && wallets[0]?.address;
 
   return (
     <header className="mb-8">
