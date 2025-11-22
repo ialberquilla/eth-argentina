@@ -13,10 +13,28 @@ import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/type
 import {Currency, CurrencyLibrary} from "@uniswap/v4-core/src/types/Currency.sol";
 
 import {ILendingAdapter} from "./interfaces/ILendingAdapter.sol";
+import {IBasenameRegistry} from "./interfaces/IBasenameRegistry.sol";
+import {IBasenameResolver} from "./interfaces/IBasenameResolver.sol";
+import {ENSNamehash} from "./libraries/ENSNamehash.sol";
 
 contract SwapDepositor is BaseHook {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
+    using ENSNamehash for string;
+
+    /// @notice Basenames Registry contract on Base mainnet
+    IBasenameRegistry public constant BASENAME_REGISTRY =
+        IBasenameRegistry(0xb94704422c2a1e396835a571837aa5ae53285a95);
+
+    /// @notice Stores swap context for resolving recipients in afterSwap
+    /// @dev Maps swapId => SwapContext containing adapter and recipient info
+    struct SwapContext {
+        address adapter;
+        address recipient;
+        bool exists;
+    }
+
+    mapping(bytes32 => SwapContext) private swapContexts;
 
     /// @notice Emitted when tokens are deposited to a lending protocol after a swap
     /// @param poolId The pool where the swap occurred
@@ -27,6 +45,11 @@ contract SwapDepositor is BaseHook {
     event DepositedToLending(
         PoolId indexed poolId, address indexed adapter, Currency token, uint256 amount, address recipient
     );
+
+    /// @notice Emitted when a basename is resolved in beforeSwap
+    /// @param basename The basename that was resolved
+    /// @param resolvedAddress The address it resolved to
+    event BasenameResolved(string basename, address resolvedAddress);
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
@@ -53,16 +76,49 @@ contract SwapDepositor is BaseHook {
     // NOTE: see IHooks.sol for function documentation
     // -----------------------------------------------
 
-    function _beforeSwap(address, PoolKey calldata, SwapParams calldata, bytes calldata)
+    function _beforeSwap(address sender, PoolKey calldata key, SwapParams calldata params, bytes calldata hookData)
         internal
         override
         returns (bytes4, BeforeSwapDelta, uint24)
     {
+        // Only proceed if hookData is provided
+        if (hookData.length > 0) {
+            // Decode adapter address and recipient identifier (address or basename)
+            (address adapterAddress, string memory recipientIdentifier) = abi.decode(hookData, (address, string));
+
+            // Only proceed if we have a valid adapter
+            if (adapterAddress != address(0) && bytes(recipientIdentifier).length > 0) {
+                address resolvedRecipient;
+
+                // Check if recipientIdentifier is an address or a basename
+                if (isAddressString(recipientIdentifier)) {
+                    // Parse as address
+                    resolvedRecipient = parseAddress(recipientIdentifier);
+                } else {
+                    // Resolve as basename
+                    resolvedRecipient = resolveBasename(recipientIdentifier);
+                    emit BasenameResolved(recipientIdentifier, resolvedRecipient);
+                }
+
+                require(resolvedRecipient != address(0), "Invalid recipient");
+
+                // Create unique swap ID to link beforeSwap and afterSwap
+                bytes32 swapId = keccak256(abi.encodePacked(sender, key.toId(), params.zeroForOne, block.number));
+
+                // Store context for afterSwap
+                swapContexts[swapId] = SwapContext({
+                    adapter: adapterAddress,
+                    recipient: resolvedRecipient,
+                    exists: true
+                });
+            }
+        }
+
         return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
     function _afterSwap(
-        address,
+        address sender,
         PoolKey calldata key,
         SwapParams calldata params,
         BalanceDelta delta,
@@ -70,11 +126,14 @@ contract SwapDepositor is BaseHook {
     ) internal override returns (bytes4, int128) {
         // Only proceed if hookData is provided
         if (hookData.length > 0) {
-            // Decode adapter address and recipient from hookData
-            (address adapterAddress, address recipient) = abi.decode(hookData, (address, address));
+            // Recreate the same swap ID from beforeSwap
+            bytes32 swapId = keccak256(abi.encodePacked(sender, key.toId(), params.zeroForOne, block.number));
 
-            // Only deposit if we have a valid adapter
-            if (adapterAddress != address(0) && recipient != address(0)) {
+            // Retrieve stored swap context
+            SwapContext memory context = swapContexts[swapId];
+
+            // Only deposit if we have a valid context
+            if (context.exists && context.adapter != address(0) && context.recipient != address(0)) {
                 // Determine output token and amount based on swap direction
                 Currency outputToken;
                 int128 outputAmountSigned;
@@ -98,22 +157,111 @@ contract SwapDepositor is BaseHook {
                     poolManager.take(outputToken, address(this), outputAmount);
 
                     // Approve the adapter to spend the tokens
-                    IERC20(tokenAddress).approve(adapterAddress, outputAmount);
+                    IERC20(tokenAddress).approve(context.adapter, outputAmount);
 
                     // Call the lending adapter to deposit tokens
                     // This transfers tokens from hook to adapter to lending protocol
-                    ILendingAdapter(adapterAddress).deposit(outputToken, outputAmount, recipient);
+                    ILendingAdapter(context.adapter).deposit(outputToken, outputAmount, context.recipient);
 
-                    emit DepositedToLending(key.toId(), adapterAddress, outputToken, outputAmount, recipient);
+                    emit DepositedToLending(key.toId(), context.adapter, outputToken, outputAmount, context.recipient);
+
+                    // Clean up storage
+                    delete swapContexts[swapId];
 
                     // Return POSITIVE delta - this reduces what the swapper receives
                     // We took X tokens, we return +X delta to indicate swapper gets X less
                     // This balances the accounting: pool gave us X, swapper's claim reduced by X
                     return (BaseHook.afterSwap.selector, outputAmountSigned);
                 }
+
+                // Clean up storage even if no deposit occurred
+                delete swapContexts[swapId];
             }
         }
 
         return (BaseHook.afterSwap.selector, 0);
+    }
+
+    // -----------------------------------------------
+    // Helper Functions
+    // -----------------------------------------------
+
+    /// @notice Resolves a basename to an Ethereum address
+    /// @param basename The basename to resolve (e.g., "alice.base.eth")
+    /// @return The resolved Ethereum address
+    function resolveBasename(string memory basename) internal view returns (address) {
+        // Compute the namehash of the basename
+        bytes32 node = basename.namehash();
+
+        // Get the resolver address from the registry
+        address resolverAddress = BASENAME_REGISTRY.resolver(node);
+        require(resolverAddress != address(0), "Basename has no resolver");
+
+        // Query the resolver for the address
+        address resolvedAddress = IBasenameResolver(resolverAddress).addr(node);
+        require(resolvedAddress != address(0), "Basename not registered");
+
+        return resolvedAddress;
+    }
+
+    /// @notice Checks if a string is formatted as an Ethereum address
+    /// @param str The string to check
+    /// @return True if the string is an address format (0x + 40 hex chars)
+    function isAddressString(string memory str) internal pure returns (bool) {
+        bytes memory b = bytes(str);
+
+        // Check length: "0x" + 40 hex characters = 42
+        if (b.length != 42) {
+            return false;
+        }
+
+        // Check if starts with "0x"
+        if (b[0] != "0" || b[1] != "x") {
+            return false;
+        }
+
+        // Check if all characters after "0x" are valid hex
+        for (uint256 i = 2; i < 42; i++) {
+            bytes1 char = b[i];
+            if (
+                !(char >= "0" && char <= "9") && // 0-9
+                !(char >= "a" && char <= "f") && // a-f
+                !(char >= "A" && char <= "F")    // A-F
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// @notice Parses an address string to an address type
+    /// @param str The address string (e.g., "0x1234...5678")
+    /// @return The parsed address
+    function parseAddress(string memory str) internal pure returns (address) {
+        bytes memory b = bytes(str);
+        require(b.length == 42, "Invalid address length");
+
+        uint160 addr = 0;
+
+        // Parse hex string to address (skip "0x" prefix)
+        for (uint256 i = 2; i < 42; i++) {
+            uint160 digit;
+            bytes1 char = b[i];
+
+            if (char >= "0" && char <= "9") {
+                digit = uint160(uint8(char)) - 48;
+            } else if (char >= "a" && char <= "f") {
+                digit = uint160(uint8(char)) - 87;
+            } else if (char >= "A" && char <= "F") {
+                digit = uint160(uint8(char)) - 55;
+            } else {
+                revert("Invalid hex character");
+            }
+
+            addr = addr * 16 + digit;
+        }
+
+        return address(addr);
     }
 }
