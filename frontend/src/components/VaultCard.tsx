@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useWallets, useLogin } from "@privy-io/react-auth";
+import { useSwap } from "@/hooks/useSwap";
+import { CONTRACTS } from "@/lib/contracts";
 
 export interface Vault {
   id: string;
@@ -31,6 +34,13 @@ export interface Vault {
   timeSinceLaunch: string;
   smartContractRiskScore: number;
   avatarColor: string;
+  // Contract Addresses (optional, for deployed pools)
+  tokenAddress?: string;
+  adapterAddress?: string;
+  poolManagerAddress?: string;
+  hookAddress?: string;
+  aavePoolAddress?: string;
+  ensName?: string; // ENS name for the adapter (e.g., "usdt-basesepolia-word-word.onetx.base.eth")
 }
 
 interface VaultCardProps {
@@ -39,6 +49,11 @@ interface VaultCardProps {
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [swapAmount, setSwapAmount] = useState("");
+  const { wallets } = useWallets();
+  const { login } = useLogin();
+  const { executeSwap, isSwapping, txHash, error } = useSwap();
 
   const getRiskLevelColor = (risk: string) => {
     switch (risk) {
@@ -50,6 +65,49 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
         return "text-red-500";
       default:
         return "text-muted";
+    }
+  };
+
+  const handleAllocateCapital = () => {
+    if (!wallets || wallets.length === 0) {
+      login();
+      return;
+    }
+    setShowSwapModal(true);
+  };
+
+  const handleSwap = async () => {
+    if (!vault.tokenAddress || !vault.adapterAddress) {
+      alert("This vault is not configured for swaps yet");
+      return;
+    }
+
+    if (!swapAmount || parseFloat(swapAmount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
+
+    const userAddress = wallets[0]?.address;
+    if (!userAddress) {
+      alert("No wallet connected");
+      return;
+    }
+
+    // For USDC -> USDT swap
+    // Use adapter address directly as string (safer than ENS name which we don't know the exact words for)
+    const result = await executeSwap({
+      tokenIn: CONTRACTS.BASE_SEPOLIA.USDC as `0x${string}`,
+      tokenOut: vault.tokenAddress as `0x${string}`,
+      amountIn: swapAmount,
+      adapterIdentifier: vault.adapterAddress!, // Send address as string
+      recipientAddress: userAddress as `0x${string}`,
+      slippageTolerance: 1,
+    });
+
+    if (result.success) {
+      alert(`Swap successful! Tx: ${result.txHash}`);
+      setShowSwapModal(false);
+      setSwapAmount("");
     }
   };
 
@@ -127,7 +185,10 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <button className="px-6 py-2 rounded-lg font-medium text-white transition-all bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90">
+          <button
+            onClick={handleAllocateCapital}
+            className="px-6 py-2 rounded-lg font-medium text-white transition-all bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
+          >
             Allocate Capital
           </button>
         </div>
@@ -222,6 +283,72 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Swap Modal */}
+      {showSwapModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-foreground mb-4">
+              Swap USDC to {vault.asset}
+            </h3>
+            <p className="text-muted text-sm mb-4">
+              Swap USDC for {vault.asset} and automatically deposit to Aave via {vault.protocol}
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm text-muted mb-2">Amount (USDC)</label>
+              <input
+                type="number"
+                value={swapAmount}
+                onChange={(e) => setSwapAmount(e.target.value)}
+                placeholder="0.0"
+                className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500 bg-opacity-10 border border-red-500 rounded-lg">
+                <p className="text-red-500 text-sm">{error}</p>
+              </div>
+            )}
+
+            {txHash && (
+              <div className="mb-4 p-3 bg-green-500 bg-opacity-10 border border-green-500 rounded-lg">
+                <p className="text-green-500 text-sm">
+                  Transaction submitted:{" "}
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    View on Explorer
+                  </a>
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSwapModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg font-medium text-muted border border-border hover:bg-card-hover"
+                disabled={isSwapping}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSwap}
+                className="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90 disabled:opacity-50"
+                disabled={isSwapping}
+              >
+                {isSwapping ? "Swapping..." : "Execute Swap"}
+              </button>
             </div>
           </div>
         </div>

@@ -28,13 +28,13 @@ export default function DocsPage() {
 
             <div className="bg-muted p-4 rounded-lg mb-4">
               <p className="text-sm text-muted-foreground mb-2">Contract Address (Base Sepolia):</p>
-              <code className="text-sm">0x045B9a7505164B418A309EdCf9A45EB1fE382951</code>
+              <code className="text-sm">0x7425AAa97230f6D575193667cfd402b0B89C47f2</code>
             </div>
 
             <div className="bg-black p-4 rounded-lg overflow-x-auto">
               <pre className="text-sm text-green-400">
 {`const products = await contract.readContract({
-  address: '0x045B9a7505164B418A309EdCf9A45EB1fE382951',
+  address: '0x7425AAa97230f6D575193667cfd402b0B89C47f2',
   abi: [{
     name: 'getAllRegisteredAdapters',
     outputs: [{
@@ -59,16 +59,16 @@ export default function DocsPage() {
               <pre className="text-sm overflow-x-auto">
 {`[
   {
-    adapterId: "USDC:BASE_SEPOLIA:word-word.base.eth",
-    adapterAddress: "0x3903D3A1d5F18925ac9c76F2dC52d1447B1AbfCF",
+    adapterId: "usdc-basesepolia-aave.onetx.base.eth",
+    adapterAddress: "0x6a546f500b9BDaF1d08acA6DF955e8919886604a",
     ensNode: "0x...",
-    domain: "base.eth"
+    domain: "onetx.base.eth"
   },
   {
-    adapterId: "USDT:BASE_SEPOLIA:word-word.base.eth",
-    adapterAddress: "0x5531bc190eC0C74dC8694176Ad849277AbA21a5D",
+    adapterId: "usdt-basesepolia-aave.onetx.base.eth",
+    adapterAddress: "0x6F0b25e2abca0b60109549b7823392e3312f505c",
     ensNode: "0x...",
-    domain: "base.eth"
+    domain: "onetx.base.eth"
   }
 ]`}
               </pre>
@@ -102,7 +102,7 @@ const hookData = encodeAbiParameters(
     { type: 'string', name: 'recipientIdentifier' }
   ],
   [
-    'USDC:BASE_SEPOLIA:word-word.base.eth',  // adapterId from step 1
+    'usdt-basesepolia-aave.onetx.base.eth',  // adapterId from step 1
     '0xYourAddress'                           // your address
   ]
 );
@@ -152,7 +152,7 @@ const publicClient = createPublicClient({
 });
 
 const products = await publicClient.readContract({
-  address: '0x045B9a7505164B418A309EdCf9A45EB1fE382951',
+  address: '0x7425AAa97230f6D575193667cfd402b0B89C47f2',
   abi: registryABI,
   functionName: 'getAllRegisteredAdapters'
 });
@@ -193,15 +193,23 @@ await walletClient.writeContract({
             <div className="space-y-3 font-mono text-sm">
               <div className="grid grid-cols-[200px_1fr] gap-4">
                 <span className="text-muted-foreground">AdapterRegistry:</span>
-                <code>0x045B9a7505164B418A309EdCf9A45EB1fE382951</code>
+                <code>0x7425AAa97230f6D575193667cfd402b0B89C47f2</code>
               </div>
               <div className="grid grid-cols-[200px_1fr] gap-4">
                 <span className="text-muted-foreground">SwapDepositor:</span>
-                <code>0xa97800be965c982c381E161124A16f5450C080c4</code>
+                <code>0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4</code>
               </div>
               <div className="grid grid-cols-[200px_1fr] gap-4">
                 <span className="text-muted-foreground">Pool Manager:</span>
                 <code>0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829</code>
+              </div>
+              <div className="grid grid-cols-[200px_1fr] gap-4">
+                <span className="text-muted-foreground">USDT Adapter:</span>
+                <code>0x6F0b25e2abca0b60109549b7823392e3312f505c</code>
+              </div>
+              <div className="grid grid-cols-[200px_1fr] gap-4">
+                <span className="text-muted-foreground">USDC Adapter:</span>
+                <code>0x6a546f500b9BDaF1d08acA6DF955e8919886604a</code>
               </div>
             </div>
           </section>

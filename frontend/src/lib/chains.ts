@@ -27,6 +27,32 @@ export const arcTestnet = defineChain({
 });
 
 /**
+ * Base Sepolia - Base testnet
+ * https://docs.base.org/docs/network-information
+ */
+export const baseSepolia = defineChain({
+  id: 84532,
+  name: "Base Sepolia",
+  nativeCurrency: {
+    name: "Ether",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://sepolia.base.org"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BaseScan",
+      url: "https://sepolia.basescan.org",
+    },
+  },
+  testnet: true,
+});
+
+/**
  * Arc Mainnet - Circle's blockchain mainnet
  * https://docs.circle.com/circle-developer-controlled-wallets/arc-mainnet
  */

@@ -14,11 +14,11 @@ contract GetAdapterENSNamesScript is Script {
     using AdapterIdGenerator for ILendingAdapter.AdapterMetadata;
 
     // Deployed addresses on Base Sepolia
-    address constant ADAPTER_REGISTRY = 0x045B9a7505164B418A309EdCf9A45EB1fE382951;
-    address constant USDC_ADAPTER = 0x3903D3A1d5F18925ac9c76F2dC52d1447B1AbfCF;
-    address constant USDT_ADAPTER = 0x5531bc190eC0C74dC8694176Ad849277AbA21a5D;
+    address constant ADAPTER_REGISTRY = 0x7425AAa97230f6D575193667cfd402b0B89C47f2;
+    address constant USDC_ADAPTER = 0x6a546f500b9BDaF1d08acA6DF955e8919886604a;
+    address constant USDT_ADAPTER = 0x6F0b25e2abca0b60109549b7823392e3312f505c;
 
-    string constant ADAPTER_DOMAIN = "base.eth";
+    string constant ADAPTER_DOMAIN = "onetx.base.eth";
 
     function run() public view {
         console2.log("========================================");
