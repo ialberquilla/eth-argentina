@@ -6,7 +6,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **Arc Blockchain Support**: Full integration with Circle's Arc blockchain (testnet and mainnet)
 - **viem Integration**: Latest viem version for blockchain interactions
 - **Multi-chain Support**: Arc, Base, Ethereum, Arbitrum, Polygon, and Optimism
-- **Agent-Friendly API**: RESTful API for AI agents to discover and invest in DeFi vaults programmatically
+- **Agent Integration**: Documentation and examples for AI agents to interact directly with smart contracts
 
 ## Getting Started
 
@@ -103,76 +103,95 @@ The default chain is set to Arc Testnet. You can modify this in `src/lib/privy-c
 - Polygon PoS
 - Optimism
 
-## Agent-Friendly API
+## Agent Integration
 
-This platform exposes a simple RESTful API that enables AI agents to:
-- **Discover** DeFi yield products across multiple protocols and chains
-- **Execute** swaps that automatically deposit into yield positions
-- **Manage** investments using only USDC - no complex token management
+This platform enables AI agents with wallets to discover and invest in DeFi yield products through direct smart contract interaction.
+
+### How Agents Use This Platform
+
+Agents interact directly with smart contracts to:
+- **Discover** products by querying the AdapterRegistry contract
+- **Check APYs** by querying lending protocols (Aave, Compound, etc.)
+- **Execute** swaps that automatically deposit to yield positions in one transaction
+- **Hold only USDC** - the platform handles all conversions and deposits
 
 ### Quick Start for AI Agents
 
-```bash
-# 1. Discover available vaults
-GET /api/vaults?network=Base&minApy=4
+```javascript
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 
-# 2. Get adapter registry information
-GET /api/registry?symbol=USDC
+// 1. Query AdapterRegistry to discover available products
+const adapter = await client.readContract({
+  address: '0x045B9a7505164B418A309EdCf9A45EB1fE382951',
+  abi: registryABI,
+  functionName: 'resolveAdapter',
+  args: ['USDC:BASE_SEPOLIA:word-word.base.eth']
+});
 
-# 3. Execute swap with auto-deposit to lending protocol
-POST /api/swap
-{
-  "vaultId": "SV-BASE-001",
-  "amountIn": "1000000",
-  "recipient": "0xYourAddress"
-}
+// 2. Query Aave to get current APY
+const reserveData = await client.readContract({
+  address: '0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951',
+  abi: aavePoolABI,
+  functionName: 'getReserveData',
+  args: ['0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f'] // USDC
+});
+
+// 3. Execute swap with auto-deposit using hookData
+const hookData = encodeAbiParameters(
+  [{ type: 'string' }, { type: 'address' }],
+  ['USDC:BASE_SEPOLIA:word-word.base.eth', recipientAddress]
+);
+// Call swap on Uniswap V4 with this hookData
 ```
-
-### Key Benefits for Agents
-
-1. **Single Currency**: Hold only USDC to access all vaults across all protocols
-2. **One Transaction**: Swap and deposit happen atomically via Uniswap V4 hooks
-3. **Automatic Protocol Integration**: Platform handles Aave, Compound, Morpho, etc.
-4. **Risk Assessment**: Comprehensive risk metrics including smart contract scores and exploit history
-5. **Cross-Chain Support**: Unified interface across Base, Ethereum, Arbitrum, and more
 
 ### Architecture
 
 The platform uses a Uniswap V4 hook architecture:
 
-- **AdapterRegistry**: Central registry for lending protocol adapters
-- **SwapDepositor Hook**: Intercepts swap outputs and deposits to lending protocols
+- **AdapterRegistry** (`0x045B9a7505164B418A309EdCf9A45EB1fE382951`): Query to discover available lending adapters
+- **SwapDepositor Hook** (`0xa97800be965c982c381E161124A16f5450C080c4`): Automatically intercepts swap outputs and deposits to lending protocols
 - **Lending Adapters**: Protocol-specific adapters for Aave, Compound, etc.
 
-When an agent executes a swap, the hook automatically:
-1. Resolves the adapter from the registry using ENS-style names
-2. Intercepts the swap output tokens
-3. Deposits to the lending protocol
-4. Returns yield-bearing tokens (e.g., aUSDC) to the recipient
+When an agent calls swap with hookData:
+1. Uniswap V4 executes the swap
+2. SwapDepositor hook intercepts the output tokens
+3. Hook resolves the adapter from the registry using the ENS name
+4. Adapter deposits tokens to the lending protocol
+5. Agent receives yield-bearing tokens (e.g., aUSDC)
+
+All in one transaction.
 
 ### Documentation
 
-For complete API documentation, examples, and integration guides, see:
-- **[Agent API Documentation](docs/AGENT_API.md)** - Complete guide for AI agents
+For complete integration guide with code examples:
+- **[Agent Integration Guide](docs/AGENT_GUIDE.md)** - Complete guide with viem, ethers.js, and web3.py examples
 - **[Contract Documentation](../contracts/README.md)** - Smart contract details
-- **[Deployed Addresses](../contracts/DEPLOYED_ADDRESSES.md)** - Contract addresses and network info
+- **[Deployed Addresses](../contracts/DEPLOYED_ADDRESSES.md)** - Contract addresses and ABIs
 
-### Example Workflow
+### Example: Complete Agent Workflow
 
-```python
-import requests
+```javascript
+// 1. Discover available adapters
+const adapters = [
+  { asset: 'USDC', ensName: 'USDC:BASE_SEPOLIA:word-word.base.eth' },
+  { asset: 'USDT', ensName: 'USDT:BASE_SEPOLIA:word-word.base.eth' }
+];
 
-# Discover best vault
-vaults = requests.get("/api/vaults?network=Base&riskLevel=Low").json()
-best_vault = max(vaults["vaults"], key=lambda v: v["apy"])
+// 2. Query APY for each
+for (const adapter of adapters) {
+  const data = await getReserveData(adapter);
+  adapter.apy = calculateAPY(data.liquidityRate);
+}
 
-# Execute investment
-swap_data = requests.post("/api/swap", json={
-    "vaultId": best_vault["id"],
-    "amountIn": "1000000",  # 1 USDC
-    "recipient": "0xYourAddress"
-}).json()
+// 3. Select best APY
+const best = adapters.sort((a, b) => b.apy - a.apy)[0];
 
-# Transaction details provided in swap_data
-# Agent receives yield-bearing tokens automatically
+// 4. Execute swap with auto-deposit
+const hookData = encodeAbiParameters(
+  [{ type: 'string' }, { type: 'address' }],
+  [best.ensName, myAddress]
+);
+await swap(poolKey, swapParams, hookData);
+// Done! You now hold yield-bearing tokens
 ```

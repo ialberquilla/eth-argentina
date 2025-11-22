@@ -8,7 +8,7 @@ This platform simplifies DeFi investing by:
 - Aggregating yield opportunities from Aave, Compound, Morpho, and other protocols
 - Enabling one-click investments via Uniswap V4 hooks
 - Providing comprehensive risk metrics and analytics
-- Offering an agent-friendly API for programmatic access
+- Offering direct smart contract access for AI agents with wallets
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Next.js 16 application with:
 - User-friendly vault discovery and comparison
 - Privy social login integration
 - Multi-chain support (Arc, Base, Ethereum, Arbitrum, Polygon, Optimism)
-- RESTful API for AI agents
+- Documentation for AI agent integration
 
 ### 2. Smart Contracts (`/contracts`)
 Foundry-based Solidity contracts:
@@ -36,29 +36,45 @@ Foundry-based Solidity contracts:
 - Comprehensive risk metrics and analytics
 
 ### For AI Agents
-- **Simple API**: Discover vaults via `/api/vaults`
-- **Single Transaction**: Swap and deposit atomically
+- **Direct Contract Interaction**: Query AdapterRegistry and call swap with your wallet
+- **Single Transaction**: Swap and deposit atomically via Uniswap V4 hooks
 - **USDC Only**: No complex token management
-- **Risk Metrics**: Automated risk assessment for decision-making
-- **Complete Documentation**: See [`frontend/docs/AGENT_API.md`](frontend/docs/AGENT_API.md)
+- **On-Chain Discovery**: Query contracts to discover products and APYs
+- **Complete Documentation**: See [`frontend/docs/AGENT_GUIDE.md`](frontend/docs/AGENT_GUIDE.md)
 
 ## Quick Start for AI Agents
 
-```bash
-# 1. Discover available vaults
-curl https://your-domain.com/api/vaults?network=Base&minApy=4
+```javascript
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 
-# 2. Get adapter registry information
-curl https://your-domain.com/api/registry?symbol=USDC
+const client = createPublicClient({
+  chain: baseSepolia,
+  transport: http('https://sepolia.base.org')
+});
 
-# 3. Execute swap with auto-deposit
-curl -X POST https://your-domain.com/api/swap \
-  -H "Content-Type: application/json" \
-  -d '{
-    "vaultId": "SV-BASE-001",
-    "amountIn": "1000000",
-    "recipient": "0xYourAddress"
-  }'
+// 1. Discover available adapters from registry
+const adapter = await client.readContract({
+  address: '0x045B9a7505164B418A309EdCf9A45EB1fE382951', // AdapterRegistry
+  abi: registryABI,
+  functionName: 'resolveAdapter',
+  args: ['USDC:BASE_SEPOLIA:word-word.base.eth']
+});
+
+// 2. Query APY from Aave
+const reserveData = await client.readContract({
+  address: '0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951', // Aave Pool
+  abi: aavePoolABI,
+  functionName: 'getReserveData',
+  args: ['0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f'] // USDC
+});
+
+// 3. Execute swap with auto-deposit
+const hookData = encodeAbiParameters(
+  [{ type: 'string' }, { type: 'address' }],
+  ['USDC:BASE_SEPOLIA:word-word.base.eth', yourAddress]
+);
+// Call swap on Uniswap V4 with this hookData
 ```
 
 ## How It Works
@@ -72,8 +88,9 @@ curl -X POST https://your-domain.com/api/swap \
 
 ### This Platform
 1. Hold USDC
-2. Call `/api/swap` with vault ID
-3. Receive yield-bearing tokens automatically
+2. Query AdapterRegistry to discover products
+3. Call Uniswap V4 `swap()` with hookData containing adapter ENS name
+4. Receive yield-bearing tokens automatically
 
 All token swaps, approvals, and protocol deposits happen in a single transaction via Uniswap V4 hooks.
 
@@ -81,15 +98,15 @@ All token swaps, approvals, and protocol deposits happen in a single transaction
 
 ```
 User/Agent (USDC)
-    “
+    ï¿½
 Uniswap V4 Swap
-    “
+    ï¿½
 SwapDepositor Hook
-    “
+    ï¿½
 AdapterRegistry (resolves protocol adapter)
-    “
+    ï¿½
 Lending Adapter (Aave/Compound/etc.)
-    “
+    ï¿½
 User receives yield-bearing tokens (aUSDC/cUSDC/etc.)
 ```
 
@@ -105,9 +122,9 @@ See [`contracts/DEPLOYED_ADDRESSES.md`](contracts/DEPLOYED_ADDRESSES.md) for com
 ## Documentation
 
 ### For AI Agents
-- **[Agent API Guide](frontend/docs/AGENT_API.md)** - Complete API documentation with examples
-- **[API Reference](frontend/docs/AGENT_API.md#api-reference)** - Endpoint specifications
-- **[Example Workflows](frontend/docs/AGENT_API.md#example-agent-workflow)** - Python examples
+- **[Agent Integration Guide](frontend/docs/AGENT_GUIDE.md)** - Complete guide for direct contract interaction
+- **[Contract Interfaces](frontend/docs/AGENT_GUIDE.md#contract-interfaces)** - ABIs and function signatures
+- **[Example Workflows](frontend/docs/AGENT_GUIDE.md#complete-example-agent-workflow)** - JavaScript and Python examples
 
 ### For Developers
 - **[Frontend README](frontend/README.md)** - Next.js app setup and configuration
@@ -136,36 +153,6 @@ cd contracts
 forge install
 forge build
 forge test
-```
-
-## API Endpoints
-
-### GET /api/vaults
-List available yield vaults with filtering options.
-
-**Query Parameters:**
-- `network`: Filter by blockchain (e.g., "Base")
-- `asset`: Filter by asset (e.g., "USDC")
-- `minApy`: Minimum APY threshold
-- `riskLevel`: Filter by risk ("Low", "Medium", "High")
-
-### GET /api/registry
-Get registered lending protocol adapters.
-
-**Query Parameters:**
-- `symbol`: Filter by token symbol
-- `network`: Filter by network
-
-### POST /api/swap
-Get transaction data for swap with automatic deposit.
-
-**Body:**
-```json
-{
-  "vaultId": "SV-BASE-001",
-  "amountIn": "1000000",
-  "recipient": "0xAddress"
-}
 ```
 
 ## Technology Stack
