@@ -53,6 +53,15 @@
 ### Uniswap V4
 - **Pool Manager**: `0x7Da1D65F8B249183667cdE74C5CBD46dD38AA829`
 
+### Uniswap V4 Pool (USDC/USDT)
+- **Tokens**: USDC (`0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f`), USDT (`0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a`)
+- **Fee**: 0.30% (3000)
+- **Tick Spacing**: 60
+- **Hook**: SwapDepositor (`0x1d16EAde6bE2D9037f458D53d0B0fD216FC740C4`)
+- **Transaction**: `0x1469f6b826ebbbae9665090784bffeaa13ea9d6acd3dde632c46a5e3986ebcbb`
+- **Purpose**: Initialized pool and provided 5000 USDC / 5000 USDT liquidity.
+
+
 ### Aave V3
 - **Pool**: `0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951`
 
@@ -127,7 +136,7 @@ adapterRegistry.registerAdapter(address(newAdapter), "base.eth");
 
 1. ✅ All contracts deployed successfully
 2. ✅ Both adapters registered in AdapterRegistry
-3. ⏳ Create a Uniswap V4 pool (use `01_CreatePoolAndAddLiquidity.s.sol`)
+3. ✅ Create a Uniswap V4 pool and provided initial liquidity (using `script/ProvideLiquidityBaseSepolia.s.sol`)
 4. ⏳ Perform test swaps (use `03_Swap.s.sol`)
 5. ⏳ Verify contracts on Basescan (optional)
 
