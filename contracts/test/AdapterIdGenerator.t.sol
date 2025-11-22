@@ -43,7 +43,7 @@ contract AdapterIdGeneratorTest is Test {
         ILendingAdapter.AdapterMetadata memory metadata = ILendingAdapter.AdapterMetadata({
             symbol: "DAI",
             chainId: 1, // Ethereum mainnet
-            protocolAddress: 0xabcdef1234567890abcdef1234567890abcdef12
+            protocolAddress: 0xabCDEF1234567890ABcDEF1234567890aBCDeF12
         });
 
         string memory adapterId = AdapterIdGenerator.generateAdapterId(metadata);

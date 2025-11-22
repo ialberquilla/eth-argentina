@@ -18,7 +18,7 @@ SYMBOL:BLOCKCHAIN:WORD-WORD
 
 1. **SYMBOL**: The token symbol the adapter is configured for (e.g., `USDC`, `DAI`, `WETH`)
 2. **BLOCKCHAIN**: The human-readable name of the blockchain (e.g., `BASE`, `ETHEREUM`, `ARBITRUM`)
-3. **WORD-WORD**: A memorable two-word identifier derived from the protocol contract address (e.g., `swift-fox`, `bright-eagle`)
+3. **WORD-WORD**: A memorable two-word identifier derived from the adapter's contract address (e.g., `swift-fox`, `bright-eagle`)
 
 ### Examples
 
@@ -128,18 +128,19 @@ For chains not in the mapping, the format defaults to `CHAIN_{chainId}`:
 
 ### Word-Based Address Encoding
 
-The word-based identifier uses a deterministic hash of the protocol contract address to select two words from predefined dictionaries:
+The word-based identifier uses a deterministic hash of the adapter's contract address to select two words from predefined dictionaries:
 
 ```solidity
-// Input: 0x1234567890123456789012345678901234567890
+// Input: 0x1234567890123456789012345678901234567890 (adapter address)
 // Output: "swift-fox" (deterministic based on keccak256 hash)
 ```
 
 This provides:
-- **Uniqueness**: 4,096 possible combinations (64 adjectives × 64 nouns)
+- **Uniqueness**: Each deployed adapter instance has a unique address, ensuring no collisions even when multiple adapters use the same underlying protocol
 - **Human-Friendly**: Easy to remember and communicate (e.g., "swift-fox", "golden-eagle")
-- **Deterministic**: Always produces the same word pair for the same address
+- **Deterministic**: Always produces the same word pair for the same adapter address
 - **No Hex**: Completely human-readable with no technical characters
+- **Flexibility**: 4,096 possible combinations (64 adjectives × 64 nouns)
 
 ### Chain Name Resolution
 
