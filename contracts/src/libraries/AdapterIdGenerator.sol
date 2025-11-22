@@ -6,14 +6,14 @@ import {ENSNamehash} from "./ENSNamehash.sol";
 
 /// @title AdapterIdGenerator
 /// @notice Library for generating standardized adapter identifiers for ENS registration
-/// @dev Generates human-readable IDs in the format: SYMBOL:BLOCKCHAIN:WORD-WORD
+/// @dev Generates human-readable IDs in the format: symbol-blockchain-word-word (ENS-compatible)
 library AdapterIdGenerator {
     using ENSNamehash for string;
 
     /// @notice Generates a standardized adapter ID from adapter metadata
-    /// @dev Format: SYMBOL:BLOCKCHAIN:WORD-WORD (e.g., "USDC:BASE:swift-fox")
+    /// @dev Format: SYMBOL-BLOCKCHAIN-WORD-WORD (e.g., "usdc-basesepolia-swift-fox")
     /// @param metadata The adapter metadata containing symbol, chainId, and protocolAddress
-    /// @return adapterId The standardized human-readable adapter ID
+    /// @return adapterId The standardized human-readable adapter ID (ENS-compatible)
     function generateAdapterId(ILendingAdapter.AdapterMetadata memory metadata)
         internal
         pure
@@ -22,22 +22,26 @@ library AdapterIdGenerator {
         string memory chainName = getChainName(metadata.chainId);
         string memory addressHash = getAddressHash(metadata.protocolAddress);
 
+        // Convert to lowercase for ENS compatibility
+        string memory symbolLower = toLowerCase(metadata.symbol);
+        string memory chainNameLower = toLowerCase(chainName);
+
         return string(
             abi.encodePacked(
-                metadata.symbol,
-                ":",
-                chainName,
-                ":",
+                symbolLower,
+                "-",
+                chainNameLower,
+                "-",
                 addressHash
             )
         );
     }
 
     /// @notice Generates a standardized adapter ID with a custom domain suffix
-    /// @dev Format: SYMBOL:BLOCKCHAIN:WORD-WORD.domain (e.g., "USDC:BASE:swift-fox.base.eth")
+    /// @dev Format: SYMBOL-BLOCKCHAIN-WORD-WORD.domain (e.g., "usdc-basesepolia-swift-fox.base.eth")
     /// @param metadata The adapter metadata containing symbol, chainId, and protocolAddress
     /// @param domain The domain suffix to append (e.g., "base.eth" or "eth")
-    /// @return fullId The full adapter ID with domain
+    /// @return fullId The full adapter ID with domain (ENS-compatible name)
     function generateAdapterIdWithDomain(
         ILendingAdapter.AdapterMetadata memory metadata,
         string memory domain
@@ -87,9 +91,9 @@ library AdapterIdGenerator {
 
         // Testnets
         if (chainId == 11155111) return "SEPOLIA";
-        if (chainId == 84532) return "BASE_SEPOLIA";
-        if (chainId == 421614) return "ARBITRUM_SEPOLIA";
-        if (chainId == 11155420) return "OPTIMISM_SEPOLIA";
+        if (chainId == 84532) return "BASESEPOLIA";
+        if (chainId == 421614) return "ARBITRUMSEPOLIA";
+        if (chainId == 11155420) return "OPTIMISMSEPOLIA";
         if (chainId == 80002) return "AMOY";
 
         // Default: return "CHAIN_{chainId}"
@@ -280,5 +284,24 @@ library AdapterIdGenerator {
         }
 
         return string(buffer);
+    }
+
+    /// @notice Converts a string to lowercase
+    /// @param str The string to convert
+    /// @return The lowercase string
+    function toLowerCase(string memory str) internal pure returns (string memory) {
+        bytes memory bStr = bytes(str);
+        bytes memory bLower = new bytes(bStr.length);
+
+        for (uint256 i = 0; i < bStr.length; i++) {
+            // If uppercase letter (A-Z = 65-90), convert to lowercase (a-z = 97-122)
+            if (uint8(bStr[i]) >= 65 && uint8(bStr[i]) <= 90) {
+                bLower[i] = bytes1(uint8(bStr[i]) + 32);
+            } else {
+                bLower[i] = bStr[i];
+            }
+        }
+
+        return string(bLower);
     }
 }

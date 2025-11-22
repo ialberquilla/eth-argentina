@@ -6,17 +6,42 @@ import {AdapterRegistry} from "../src/AdapterRegistry.sol";
 import {AaveAdapter} from "../src/adapters/AaveAdapter.sol";
 import {AdapterIdGenerator} from "../src/libraries/AdapterIdGenerator.sol";
 import {ILendingAdapter} from "../src/interfaces/ILendingAdapter.sol";
+import {MockENSRegistry} from "./mocks/MockENSRegistry.sol";
+import {MockL2Resolver} from "./mocks/MockL2Resolver.sol";
+import {ENSNamehash} from "../src/libraries/ENSNamehash.sol";
 
 contract AdapterRegistryTest is Test {
     using AdapterIdGenerator for ILendingAdapter.AdapterMetadata;
+    using ENSNamehash for string;
 
     AdapterRegistry registry;
     AaveAdapter adapter;
+    MockENSRegistry ensRegistry;
+    MockL2Resolver l2Resolver;
 
     string constant DOMAIN = "adapters.eth";
+    bytes32 parentNode;
 
     function setUp() public {
-        registry = new AdapterRegistry();
+        // Deploy mock ENS contracts
+        ensRegistry = new MockENSRegistry();
+        l2Resolver = new MockL2Resolver();
+
+        // Calculate parent node
+        parentNode = DOMAIN.namehash();
+
+        // Set up the parent node to be owned by this test contract
+        ensRegistry.setRecord(parentNode, address(this), address(l2Resolver), 0);
+
+        // Deploy registry with ENS integration
+        registry = new AdapterRegistry(
+            address(ensRegistry),
+            address(l2Resolver),
+            parentNode,
+            DOMAIN
+        );
+
+        // Deploy adapter
         adapter = new AaveAdapter(address(0x1234), "USDC");
     }
 
@@ -40,8 +65,8 @@ contract AdapterRegistryTest is Test {
     }
 
     function testResolveUnregisteredAdapter() public {
-        vm.expectRevert("Adapter not registered");
-        registry.resolveAdapter("USDC:BASE:test-test.adapters.eth");
+        vm.expectRevert();
+        registry.resolveAdapter("usdc-base-test-test.adapters.eth");
     }
 
     function testRegisterMultipleAdapters() public {

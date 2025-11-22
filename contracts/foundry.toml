@@ -15,7 +15,7 @@ base = "${BASE_RPC_URL}"
 baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 # Fork testing configuration
-[fork]
+[profile.fork]
 url = "${RPC_URL}"
 block_number = 22000000
 

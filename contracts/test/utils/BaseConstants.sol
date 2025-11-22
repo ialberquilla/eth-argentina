@@ -23,6 +23,10 @@ library BaseConstants {
     address constant aWETH = 0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7;
     address constant aUSDbC = 0x0a1d576f3eFeF75b330424287a95A366e8281D54;
 
+    // ============ ENS / Basenames Addresses ============
+    address constant ENS_REGISTRY = 0xB94704422c2a1E396835A571837Aa5AE53285a95;
+    address constant L2_RESOLVER = 0xC6d566A56A1aFf6508b41f6c90ff131615583BCD;
+
     // ============ Helper Accounts ============
     // Well-funded accounts on Base for testing (whale addresses)
     address constant USDC_WHALE = 0x20FE51A9229EEf2cF8Ad9E89d91CAb9312cF3b7A; // Coinbase address with USDC
