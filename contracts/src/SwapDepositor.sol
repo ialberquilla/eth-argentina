@@ -15,6 +15,7 @@ import {Currency, CurrencyLibrary} from "@uniswap/v4-core/src/types/Currency.sol
 import {ILendingAdapter} from "./interfaces/ILendingAdapter.sol";
 import {IBasenameRegistry} from "./interfaces/IBasenameRegistry.sol";
 import {IBasenameResolver} from "./interfaces/IBasenameResolver.sol";
+import {IAdapterRegistry} from "./interfaces/IAdapterRegistry.sol";
 import {ENSNamehash} from "./libraries/ENSNamehash.sol";
 
 contract SwapDepositor is BaseHook {
@@ -25,6 +26,9 @@ contract SwapDepositor is BaseHook {
     /// @notice Basenames Registry contract on Base mainnet
     IBasenameRegistry public constant BASENAME_REGISTRY =
         IBasenameRegistry(0xB94704422c2a1E396835A571837Aa5AE53285a95);
+
+    /// @notice Adapter Registry for resolving lending adapter ENS names
+    IAdapterRegistry public immutable adapterRegistry;
 
     /// @notice Stores swap context for resolving recipients in afterSwap
     /// @dev Maps swapId => SwapContext containing adapter and recipient info
@@ -51,7 +55,15 @@ contract SwapDepositor is BaseHook {
     /// @param resolvedAddress The address it resolved to
     event BasenameResolved(string basename, address resolvedAddress);
 
-    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+    /// @notice Emitted when an adapter ENS name is resolved
+    /// @param adapterEnsName The adapter ENS name that was resolved
+    /// @param resolvedAddress The adapter address it resolved to
+    event AdapterResolved(string adapterEnsName, address resolvedAddress);
+
+    constructor(IPoolManager _poolManager, IAdapterRegistry _adapterRegistry) BaseHook(_poolManager) {
+        require(address(_adapterRegistry) != address(0), "Invalid adapter registry");
+        adapterRegistry = _adapterRegistry;
+    }
 
     function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
         return Hooks.Permissions({
@@ -83,14 +95,25 @@ contract SwapDepositor is BaseHook {
     {
         // Only proceed if hookData is provided
         if (hookData.length > 0) {
-            // Decode adapter address and recipient identifier (address or basename)
-            (address adapterAddress, string memory recipientIdentifier) = abi.decode(hookData, (address, string));
+            // Decode adapter identifier and recipient identifier (both can be ENS names or addresses)
+            (string memory adapterIdentifier, string memory recipientIdentifier) = abi.decode(hookData, (string, string));
 
-            // Only proceed if we have a valid adapter
-            if (adapterAddress != address(0) && bytes(recipientIdentifier).length > 0) {
+            // Only proceed if we have valid identifiers
+            if (bytes(adapterIdentifier).length > 0 && bytes(recipientIdentifier).length > 0) {
+                address resolvedAdapter;
                 address resolvedRecipient;
 
-                // Check if recipientIdentifier is an address or a basename
+                // Resolve adapter identifier (address or ENS name)
+                if (isAddressString(adapterIdentifier)) {
+                    // Parse as address
+                    resolvedAdapter = parseAddress(adapterIdentifier);
+                } else {
+                    // Resolve as adapter ENS name
+                    resolvedAdapter = adapterRegistry.resolveAdapter(adapterIdentifier);
+                    emit AdapterResolved(adapterIdentifier, resolvedAdapter);
+                }
+
+                // Resolve recipient identifier (address or basename)
                 if (isAddressString(recipientIdentifier)) {
                     // Parse as address
                     resolvedRecipient = parseAddress(recipientIdentifier);
@@ -100,6 +123,7 @@ contract SwapDepositor is BaseHook {
                     emit BasenameResolved(recipientIdentifier, resolvedRecipient);
                 }
 
+                require(resolvedAdapter != address(0), "Invalid adapter");
                 require(resolvedRecipient != address(0), "Invalid recipient");
 
                 // Create unique swap ID to link beforeSwap and afterSwap
@@ -107,7 +131,7 @@ contract SwapDepositor is BaseHook {
 
                 // Store context for afterSwap
                 swapContexts[swapId] = SwapContext({
-                    adapter: adapterAddress,
+                    adapter: resolvedAdapter,
                     recipient: resolvedRecipient,
                     exists: true
                 });
