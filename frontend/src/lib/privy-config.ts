@@ -1,6 +1,6 @@
 import type { PrivyClientConfig } from "@privy-io/react-auth";
 import { base, mainnet, arbitrum, polygon, optimism } from "viem/chains";
-import { arcTestnet, arcMainnet, baseSepolia } from "./chains";
+import { arcTestnet, arcTestnetAlt, arcMainnet, baseSepolia } from "./chains";
 
 /**
  * Privy configuration for social login and blockchain support
@@ -36,14 +36,15 @@ export const privyConfig: PrivyClientConfig = {
 
   // Supported chains - includes Arc (Circle), Base, Ethereum, and other major networks
   supportedChains: [
-    baseSepolia,   // Base Sepolia Testnet
-    arcTestnet,    // Arc Testnet (Circle blockchain)
-    arcMainnet,    // Arc Mainnet (Circle blockchain)
-    base,          // Base (Coinbase L2)
-    mainnet,       // Ethereum Mainnet
-    arbitrum,      // Arbitrum One
-    polygon,       // Polygon PoS
-    optimism,      // Optimism
+    baseSepolia,     // Base Sepolia Testnet
+    arcTestnet,      // Arc Testnet (Circle blockchain - Caldera)
+    arcTestnetAlt,   // Arc Testnet (Alternative deployment)
+    arcMainnet,      // Arc Mainnet (Circle blockchain)
+    base,            // Base (Coinbase L2)
+    mainnet,         // Ethereum Mainnet
+    arbitrum,        // Arbitrum One
+    polygon,         // Polygon PoS
+    optimism,        // Optimism
   ],
 
   // Default chain for wallet connection

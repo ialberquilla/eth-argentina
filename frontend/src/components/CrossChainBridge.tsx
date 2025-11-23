@@ -11,7 +11,8 @@ interface ChainOption {
 }
 
 const SUPPORTED_CHAINS: ChainOption[] = [
-  { chainId: 23244, name: "Arc Testnet" },
+  { chainId: 5042002, name: "Arc Testnet" },
+  { chainId: 23244, name: "Arc Testnet (Caldera)" },
   { chainId: 84532, name: "Base Sepolia" },
   { chainId: 8453, name: "Base" },
 ];
@@ -21,7 +22,7 @@ export default function CrossChainBridge() {
 
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [sourceChain, setSourceChain] = useState(23244); // Arc Testnet
+  const [sourceChain, setSourceChain] = useState(5042002); // Arc Testnet
   const [destinationChain, setDestinationChain] = useState(84532); // Base Sepolia
   const [messageHash, setMessageHash] = useState("");
   const [enableSwap, setEnableSwap] = useState(false);

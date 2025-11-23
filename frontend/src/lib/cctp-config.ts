@@ -29,6 +29,15 @@ export const CCTP_CONFIG: CCTPChainConfig = {
     domain: 26,
   },
 
+  // Arc Testnet (Chain ID: 5042002, Domain: 26) - Alternative testnet
+  5042002: {
+    tokenMessenger: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+    messageTransmitter: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    tokenMinter: "0xb43db544E2c27092c107639Ad201b3dEfAbcF192",
+    usdc: "0x3600000000000000000000000000000000000000", // Native USDC on Arc
+    domain: 26,
+  },
+
   // Arc Mainnet (Chain ID: 23241, Domain: TBD - Update when available)
   23241: {
     tokenMessenger: "0x0000000000000000000000000000000000000000", // Update when available
@@ -76,8 +85,8 @@ export function getCCTPConfig(chainId: number): CCTPConfig | undefined {
  * Get attestation API URL based on chain ID
  */
 export function getAttestationAPI(chainId: number): string {
-  // Testnet chain IDs: Arc Testnet (23244), Base Sepolia (84532)
-  const isTestnet = chainId === 23244 || chainId === 84532;
+  // Testnet chain IDs: Arc Testnet (23244, 5042002), Base Sepolia (84532)
+  const isTestnet = chainId === 23244 || chainId === 5042002 || chainId === 84532;
   return isTestnet ? ATTESTATION_API.testnet : ATTESTATION_API.mainnet;
 }
 
