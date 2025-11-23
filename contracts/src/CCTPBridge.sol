@@ -99,8 +99,9 @@ contract CCTPBridge {
         // Transfer USDC from sender to this contract
         require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
-        // Approve TokenMessenger to burn USDC
-        require(usdc.approve(address(tokenMessenger), amount), "Approval failed");
+        // Get TokenMinter address from TokenMessenger and approve it to burn USDC
+        address tokenMinter = tokenMessenger.localMinter();
+        require(usdc.approve(tokenMinter, amount), "Approval failed");
 
         // Convert recipient address to bytes32
         bytes32 mintRecipient = bytes32(uint256(uint160(recipient)));
@@ -136,8 +137,9 @@ contract CCTPBridge {
         // Transfer USDC from sender to this contract
         require(usdc.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
-        // Approve TokenMessenger to burn USDC
-        require(usdc.approve(address(tokenMessenger), amount), "Approval failed");
+        // Get TokenMinter address from TokenMessenger and approve it to burn USDC
+        address tokenMinter = tokenMessenger.localMinter();
+        require(usdc.approve(tokenMinter, amount), "Approval failed");
 
         // Convert destination bridge address to bytes32
         bytes32 mintRecipient = bytes32(uint256(uint160(destinationBridge)));

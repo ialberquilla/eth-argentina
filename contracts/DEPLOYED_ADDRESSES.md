@@ -1,4 +1,9 @@
-# Deployed Contracts - Base Sepolia (Updated)
+# Deployed Contracts
+
+## Networks
+
+- **Base Sepolia** (Chain ID: 84532)
+- **Arc Testnet** (Chain ID: 5042002)
 
 ## Deployment Details
 
@@ -56,6 +61,71 @@
 ### Tokens
 - **USDC**: `0xba50Cd2A20f6DA35D788639E581bca8d0B5d4D5f`
 - **USDT**: `0x0a215D8ba66387DCA84B284D18c3B4ec3de6E54a`
+
+## Arc Testnet CCTP Bridge
+
+### CCTP Helper Contract
+- **Address**: `0xC5567a5E3370d4DBfB0540025078e283e36A363d`
+- **Purpose**: Helper contract for bridging USDC from Arc Testnet to Base Sepolia via Circle's CCTP
+- **Function**: `bridgeWithPreapproval((uint256,uint256,uint256,bytes32,bytes32,address,address,uint32,uint32))`
+
+### Arc Testnet USDC
+- **Address**: `0x3600000000000000000000000000000000000000`
+- **Decimals**: 6 (ERC-20 interface) / 18 (native gas token)
+- **Note**: USDC is the native gas token on Arc. The ERC-20 interface at this address mirrors native balance.
+
+### CCTP Contracts (Arc Testnet)
+- **TokenMessenger**: `0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA`
+- **MessageTransmitter**: `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`
+- **TokenMinter**: `0xb43db544E2c27092c107639Ad201b3dEfAbcF192`
+- **Domain**: 26
+
+### Example Bridge Transaction
+- **Transaction Hash**: `0x9914214a5db159182f63c8400ff455a41dd2c276422cbe10948fc59e3df9dcd3`
+- **Explorer**: https://testnet.arcscan.app/tx/0x9914214a5db159182f63c8400ff455a41dd2c276422cbe10948fc59e3df9dcd3
+- **Amount**: 1 USDC (1,000,000 with 6 decimals)
+- **Source**: Arc Testnet
+- **Destination**: Base Sepolia (Domain 6)
+- **Recipient**: `0x8ff8E6ee2A0d3427160FBa3240E87797036a2BC0`
+- **Nonce**: 6
+
+### How to Bridge USDC from Arc to Base Sepolia
+
+1. **Approve the helper contract to spend USDC:**
+```bash
+cast send 0x3600000000000000000000000000000000000000 \
+  "approve(address,uint256)" \
+  0xC5567a5E3370d4DBfB0540025078e283e36A363d \
+  1000000 \
+  --rpc-url https://rpc.testnet.arc.network \
+  --private-key $PRIVATE_KEY \
+  --legacy
+```
+
+2. **Call the helper contract to bridge:**
+```bash
+# Bridge 1 USDC to Base Sepolia
+cast send 0xC5567a5E3370d4DBfB0540025078e283e36A363d \
+  0xd0d4229a00000000000000000000000000000000000000000000000000000000000f4240000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008ff8e6ee2a0d3427160fba3240e87797036a2bc000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003600000000000000000000000000000000000000000000000000000000000000c5567a5e3370d4dbfb0540025078e283e36a363d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006 \
+  --rpc-url https://rpc.testnet.arc.network \
+  --private-key $PRIVATE_KEY \
+  --legacy \
+  --gas-limit 400000
+```
+
+3. **Wait ~20 minutes for Circle's attestation**
+
+4. **Get attestation from Circle's API:**
+```bash
+# Extract message hash from transaction logs
+curl https://iris-api-sandbox.circle.com/attestations/{messageHash}
+```
+
+5. **Receive USDC on Base Sepolia:**
+```bash
+# Use the attestation to call receiveMessage on Base Sepolia's MessageTransmitter
+# MessageTransmitter address on Base Sepolia: 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275
+```
 
 ## How to Use
 
