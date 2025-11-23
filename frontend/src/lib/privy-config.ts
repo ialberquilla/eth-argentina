@@ -1,10 +1,10 @@
 import type { PrivyClientConfig } from "@privy-io/react-auth";
 import { base, mainnet, arbitrum, polygon, optimism } from "viem/chains";
-import { arcTestnet, arcTestnetAlt, arcMainnet, baseSepolia } from "./chains";
+import { baseSepolia } from "./chains";
 
 /**
  * Privy configuration for social login and blockchain support
- * Includes Arc (Circle blockchain) support with viem
+ * Note: Arc chains removed as they're not supported by Coinbase Smart Wallet
  */
 export const privyConfig: PrivyClientConfig = {
   // Appearance customization
@@ -34,12 +34,9 @@ export const privyConfig: PrivyClientConfig = {
     "tiktok",
   ],
 
-  // Supported chains - includes Arc (Circle), Base, Ethereum, and other major networks
+  // Supported chains - only chains supported by Coinbase Smart Wallet
   supportedChains: [
     baseSepolia,     // Base Sepolia Testnet
-    arcTestnet,      // Arc Testnet (Circle blockchain - Caldera)
-    arcTestnetAlt,   // Arc Testnet (Alternative deployment)
-    arcMainnet,      // Arc Mainnet (Circle blockchain)
     base,            // Base (Coinbase L2)
     mainnet,         // Ethereum Mainnet
     arbitrum,        // Arbitrum One

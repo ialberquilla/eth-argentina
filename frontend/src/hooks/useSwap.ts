@@ -55,15 +55,16 @@ export function useSwap() {
 
       const publicClient = createPublicClient({
         chain: baseSepolia,
-        transport: http(),
+        transport: http("https://sepolia.base.org"),
       });
 
       const [userAddress] = await walletClient.getAddresses();
 
       // Parse amount with 6 decimals (USDC/USDT)
       const amountIn = parseUnits(params.amountIn, 6);
-      const slippage = params.slippageTolerance || 1; // 1% default
-      const amountOutMin = (amountIn * BigInt(100 - slippage)) / BigInt(100);
+      // Set amountOutMin to 0 to disable slippage protection (like the working Solidity script)
+      // TODO: Calculate proper amountOutMin based on pool price
+      const amountOutMin = BigInt(0);
 
       // Determine swap direction
       const zeroForOne =
@@ -76,6 +77,11 @@ export function useSwap() {
         [{ type: "string" }, { type: "string" }],
         [params.adapterIdentifier, params.recipientAddress]
       );
+
+      console.log("Hook data parameters:", {
+        adapterIdentifier: params.adapterIdentifier,
+        recipientIdentifier: params.recipientAddress,
+      });
 
       // Step 1: Check allowance and approve if needed
       const allowance = (await publicClient.readContract({
@@ -95,6 +101,7 @@ export function useSwap() {
           functionName: "approve",
           args: [CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")],
           account: userAddress,
+          chain: baseSepolia,
         });
         console.log("Token approval tx:", approveTx);
 
@@ -119,31 +126,84 @@ export function useSwap() {
         deadline: deadline.toString(),
       });
 
-      const swapTx = await walletClient.writeContract({
-        address: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address,
-        abi: SWAP_ROUTER_ABI,
-        functionName: "swapExactTokensForTokens",
-        args: [
-          amountIn,
-          amountOutMin,
-          zeroForOne,
-          POOL_CONFIG,
-          hookData,
-          userAddress,
-          deadline,
-        ],
-        account: userAddress,
+      console.log("Swap parameters breakdown:", {
+        swapRouter: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER,
+        amountIn: amountIn.toString(),
+        amountOutMin: amountOutMin.toString(),
+        zeroForOne,
+        "poolKey.currency0": POOL_CONFIG.currency0,
+        "poolKey.currency1": POOL_CONFIG.currency1,
+        "poolKey.fee": POOL_CONFIG.fee,
+        "poolKey.tickSpacing": POOL_CONFIG.tickSpacing,
+        "poolKey.hooks": POOL_CONFIG.hooks,
+        receiver: userAddress,
+        deadline: deadline.toString(),
       });
 
-      console.log("Swap transaction sent:", swapTx);
-      setTxHash(swapTx);
+      try {
+        // Estimate gas for the swap transaction
+        const gasEstimate = await publicClient.estimateContractGas({
+          address: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address,
+          abi: SWAP_ROUTER_ABI,
+          functionName: "swapExactTokensForTokens",
+          args: [
+            amountIn,
+            amountOutMin,
+            zeroForOne,
+            POOL_CONFIG,
+            hookData,
+            userAddress,
+            deadline,
+          ],
+          account: userAddress,
+        });
 
-      return {
-        success: true,
-        txHash: swapTx,
-      };
+        // Add 20% buffer to gas estimate
+        const gasLimit = (gasEstimate * BigInt(120)) / BigInt(100);
+
+        console.log("Gas estimate:", gasEstimate.toString(), "Gas limit:", gasLimit.toString());
+
+        const swapTx = await walletClient.writeContract({
+          address: CONTRACTS.BASE_SEPOLIA.SWAP_ROUTER as Address,
+          abi: SWAP_ROUTER_ABI,
+          functionName: "swapExactTokensForTokens",
+          args: [
+            amountIn,
+            amountOutMin,
+            zeroForOne,
+            POOL_CONFIG,
+            hookData,
+            userAddress,
+            deadline,
+          ],
+          account: userAddress,
+          chain: baseSepolia,
+          gas: gasLimit,
+        });
+
+        console.log("Swap transaction sent:", swapTx);
+        setTxHash(swapTx);
+
+        return {
+          success: true,
+          txHash: swapTx,
+        };
+      } catch (swapError: any) {
+        console.error("Swap writeContract error:", swapError);
+        console.error("Error details:", {
+          message: swapError.message,
+          code: swapError.code,
+          data: swapError.data,
+          cause: swapError.cause,
+          metaMessages: swapError.metaMessages,
+          shortMessage: swapError.shortMessage,
+          details: swapError.details,
+        });
+        throw swapError;
+      }
     } catch (err: any) {
       console.error("Swap error:", err);
+      console.error("Full error object:", JSON.stringify(err, null, 2));
       setError(err.message || "Swap failed");
       return {
         success: false,

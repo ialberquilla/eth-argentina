@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useWallets, useLogin } from "@privy-io/react-auth";
+import { useSwap } from "@/hooks/useSwap";
+import { CONTRACTS } from "@/lib/contracts";
 
 export interface Vault {
   id: string;
@@ -52,8 +54,11 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   const [arcTxStatus, setArcTxStatus] = useState<"loading" | "completed" | "idle">("idle");
   const [baseSwapStatus, setBaseSwapStatus] = useState<"loading" | "completed" | "idle">("idle");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [arcTxHash, setArcTxHash] = useState<string>("");
+  const [baseSwapTxHash, setBaseSwapTxHash] = useState<string>("");
   const { wallets } = useWallets();
   const { login } = useLogin();
+  const { executeSwap } = useSwap();
 
   const getRiskLevelColor = (risk: string) => {
     switch (risk) {
@@ -77,27 +82,74 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   };
 
   const handleSwap = async () => {
+    if (!vault.tokenAddress || !vault.adapterAddress) {
+      alert("This vault is not configured for swaps yet");
+      return;
+    }
+
     if (!swapAmount || parseFloat(swapAmount) <= 0) {
       alert("Please enter a valid amount");
       return;
     }
 
-    // Mock behavior - start Arc Tx
-    setArcTxStatus("loading");
-    setBaseSwapStatus("idle");
-    setShowSuccess(false);
+    const userAddress = wallets[0]?.address;
+    if (!userAddress) {
+      alert("No wallet connected");
+      return;
+    }
 
-    // After 3 seconds, complete Arc Tx and start Base Swap
-    setTimeout(() => {
+    try {
+      // Step 1: Arc Transaction (Bridge USDC from Arc to Base via CCTP)
+      // Note: This is simplified - in production you'd need to handle Arc network switching
+      setArcTxStatus("loading");
+      setBaseSwapStatus("idle");
+      setShowSuccess(false);
+      setArcTxHash("");
+      setBaseSwapTxHash("");
+
+      // For now, we'll simulate the Arc bridge transaction
+      // In production, you'd call the CCTP bridge contract on Arc
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const mockArcTx = "0x9914214a5db159182f63c8400ff455a41dd2c276422cbe10948fc59e3df9dcd3";
+      setArcTxHash(mockArcTx);
       setArcTxStatus("completed");
+
+      // Step 2: Execute swap on Base Sepolia
       setBaseSwapStatus("loading");
 
-      // After 3 more seconds (6 total), complete Base Swap and show success
-      setTimeout(() => {
+      console.log("VaultCard: Calling executeSwap with:", {
+        tokenIn: CONTRACTS.BASE_SEPOLIA.USDC,
+        tokenOut: vault.tokenAddress,
+        amountIn: swapAmount,
+        adapterIdentifier: vault.adapterAddress,
+        recipientAddress: userAddress,
+        slippageTolerance: 1,
+      });
+
+      const result = await executeSwap({
+        tokenIn: CONTRACTS.BASE_SEPOLIA.USDC as `0x${string}`,
+        tokenOut: vault.tokenAddress as `0x${string}`,
+        amountIn: swapAmount,
+        adapterIdentifier: vault.adapterAddress!,
+        recipientAddress: userAddress as `0x${string}`,
+        slippageTolerance: 1,
+      });
+
+      if (result.success && result.txHash) {
+        setBaseSwapTxHash(result.txHash);
         setBaseSwapStatus("completed");
         setShowSuccess(true);
-      }, 3000);
-    }, 3000);
+      } else {
+        throw new Error(result.error || "Swap failed");
+      }
+    } catch (err: any) {
+      console.error("Transaction error:", err);
+      alert(`Transaction failed: ${err.message}`);
+      // Reset states on error
+      setArcTxStatus("idle");
+      setBaseSwapStatus("idle");
+      setShowSuccess(false);
+    }
   };
 
   return (
@@ -307,39 +359,41 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <div className="mb-4 space-y-3">
                 {/* Arc Tx */}
                 <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg">
-                  {arcTxStatus === "loading" ? (
-                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  ) : null}
-                  {arcTxStatus === "completed" ? (
+                  {arcTxStatus === "loading" && (
+                    <>
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-foreground text-sm">Arc Tx</span>
+                    </>
+                  )}
+                  {arcTxStatus === "completed" && arcTxHash && (
                     <a
-                      href="https://testnet.arcscan.app/tx/0x9914214a5db159182f63c8400ff455a41dd2c276422cbe10948fc59e3df9dcd3"
+                      href={`https://testnet.arcscan.app/tx/${arcTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
                     >
                       Arc Tx
                     </a>
-                  ) : (
-                    <span className="text-foreground text-sm">Arc Tx</span>
                   )}
                 </div>
 
                 {/* Base Swap */}
                 <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg">
-                  {baseSwapStatus === "loading" ? (
-                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  ) : null}
-                  {baseSwapStatus === "completed" ? (
+                  {baseSwapStatus === "loading" && (
+                    <>
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-foreground text-sm">Base Swap</span>
+                    </>
+                  )}
+                  {baseSwapStatus === "completed" && baseSwapTxHash && (
                     <a
-                      href="https://sepolia.basescan.org/tx/0x29083f8a9081883d35836ce4c352154be7e0061d7040eaa2ddb4357301c48031"
+                      href={`https://sepolia.basescan.org/tx/${baseSwapTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
                     >
                       Base Swap
                     </a>
-                  ) : (
-                    <span className="text-foreground text-sm">Base Swap</span>
                   )}
                 </div>
 
@@ -362,6 +416,8 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
                   setArcTxStatus("idle");
                   setBaseSwapStatus("idle");
                   setShowSuccess(false);
+                  setArcTxHash("");
+                  setBaseSwapTxHash("");
                   setSwapAmount("");
                 }}
                 className="flex-1 px-4 py-2 rounded-lg font-medium text-muted border border-border hover:bg-card-hover"
