@@ -14,7 +14,7 @@ contract LinkBridges is Script {
     address constant BASE_BRIDGE = 0x4c23382b26C3ab153f1479b8be2545AB620eD6F2;
 
     function run() public {
-        if (block.chainid == 23244) {
+        if (block.chainid == 5042002) {
             linkArcBridge();
         } else if (block.chainid == 84532) {
             linkBaseBridge();
@@ -70,7 +70,7 @@ contract LinkBridges is Script {
         console.log("Bridge Configuration Check");
         console.log("=================================================");
 
-        if (block.chainid == 23244) {
+        if (block.chainid == 5042002) {
             CCTPBridge bridge = CCTPBridge(ARC_BRIDGE);
             console.log("Chain: Arc Testnet");
             console.log("Bridge:", ARC_BRIDGE);

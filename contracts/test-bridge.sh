@@ -61,7 +61,7 @@ case $option in
         echo ""
 
         forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
-            --rpc-url https://rpc.arc.gelato.digital \
+            --rpc-url https://rpc.testnet.arc.network \
             --broadcast \
             --legacy \
             -vvv
@@ -75,7 +75,7 @@ case $option in
         echo "Arc Testnet:"
         forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
             --sig "checkBalance()" \
-            --rpc-url https://rpc.arc.gelato.digital
+            --rpc-url https://rpc.testnet.arc.network
 
         echo ""
         echo "Base Sepolia:"
@@ -92,7 +92,7 @@ case $option in
         echo "Arc Testnet Bridge:"
         forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
             --sig "checkBridgeStatus()" \
-            --rpc-url https://rpc.arc.gelato.digital
+            --rpc-url https://rpc.testnet.arc.network
 
         echo ""
         echo "Base Sepolia Bridge:"
