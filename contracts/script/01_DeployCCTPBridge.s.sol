@@ -10,9 +10,9 @@ import {CCTPBridge} from "../src/CCTPBridge.sol";
  * @notice Deployment script for CCTPBridge contract
  * @dev Usage:
  *   Arc Testnet to Base Sepolia:
- *     forge script script/01_DeployCCTPBridge.s.sol:DeployCCTPBridge --rpc-url arc-testnet --broadcast --verify
+ *     forge script script/01_DeployCCTPBridge.s.sol:DeployCCTPBridge --rpc-url https://rpc.testnet.arc.network --broadcast --verify
  *   Base Sepolia (for receiving):
- *     forge script script/01_DeployCCTPBridge.s.sol:DeployCCTPBridge --rpc-url base-sepolia --broadcast --verify
+ *     forge script script/01_DeployCCTPBridge.s.sol:DeployCCTPBridge --rpc-url https://sepolia.base.org --broadcast --verify
  */
 contract DeployCCTPBridge is Script {
     // Arc Testnet CCTP addresses (Domain: 26)
@@ -42,8 +42,9 @@ contract DeployCCTPBridge is Script {
 
         CCTPBridge bridge;
 
-        if (chainId == 23244) {
+        if (chainId == 23244 || chainId == 5042002) {
             // Arc Testnet - Deploy bridge for Arc -> Base Sepolia
+            // Supports both Arc Testnet chain IDs: 23244 and 5042002
             console.log("Deploying Arc Testnet -> Base Sepolia bridge");
             bridge = new CCTPBridge(
                 ARC_TESTNET_TOKEN_MESSENGER,

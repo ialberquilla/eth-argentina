@@ -1,7 +1,7 @@
 import { defineChain } from "viem";
 
 /**
- * Arc Testnet - Circle's blockchain testnet
+ * Arc Testnet - Circle's blockchain testnet (Caldera)
  * https://docs.circle.com/circle-developer-controlled-wallets/arc-testnet
  */
 export const arcTestnet = defineChain({
@@ -21,6 +21,32 @@ export const arcTestnet = defineChain({
     default: {
       name: "Arc Testnet Explorer",
       url: "https://arc-testnet.calderaexplorer.xyz",
+    },
+  },
+  testnet: true,
+});
+
+/**
+ * Arc Testnet - Alternative testnet deployment
+ * https://rpc.testnet.arc.network
+ */
+export const arcTestnetAlt = defineChain({
+  id: 5042002,
+  name: "Arc Testnet",
+  nativeCurrency: {
+    name: "USDC",
+    symbol: "USDC",
+    decimals: 6,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.testnet.arc.network"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Arc Testnet Explorer",
+      url: "https://testnet.arcscan.app",
     },
   },
   testnet: true,

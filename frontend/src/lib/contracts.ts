@@ -3,6 +3,9 @@
  */
 
 export const CONTRACTS = {
+  ARC_TESTNET: {
+    CCTP_BRIDGE: "0x2Bd7115Db8FFdcB077C8a146401aBd4A5E982903",
+  },
   BASE_SEPOLIA: {
     POOL_MANAGER: "0x05e73354cfdd6745c338b50bcfdfa3aa6fa03408",
     SWAP_ROUTER: "0x71cd4ea054f9cb3d3bf6251a00673303411a7dd9", // Hookmate V4 SwapRouter on Base Sepolia
@@ -11,6 +14,7 @@ export const CONTRACTS = {
     HOOK: "0xd1b0f8f27aad2292765e2ca645e7ef1a692980c4",
     ADAPTER: "0x992a8847c28f9cd9251d5382249a4d35523f510a",
     AAVE_POOL: "0x6645d1d54aa2450e048cbdca38e032cfe8da7845",
+    CCTP_BRIDGE: "0x4c23382b26C3ab153f1479b8be2545AB620eD6F2",
   },
 } as const;
 
