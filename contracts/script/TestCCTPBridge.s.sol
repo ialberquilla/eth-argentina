@@ -20,7 +20,7 @@ contract TestCCTPBridge is Script {
     address constant ARC_BRIDGE = 0x2Bd7115Db8FFdcB077C8a146401aBd4A5E982903;
     address constant ARC_USDC = 0x3600000000000000000000000000000000000000;
     address constant ARC_MESSAGE_TRANSMITTER = 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275;
-    uint256 constant ARC_CHAIN_ID = 23244;
+    uint256 constant ARC_CHAIN_ID = 5042002;
 
     // ============ Base Sepolia Configuration ============
     address constant BASE_BRIDGE = 0x4c23382b26C3ab153f1479b8be2545AB620eD6F2;
@@ -47,7 +47,7 @@ contract TestCCTPBridge is Script {
             console.log("2. Call this script with the attestation data");
         } else {
             console.log("Unknown chain ID:", block.chainid);
-            console.log("Expected Arc Testnet (23244) or Base Sepolia (84532)");
+            console.log("Expected Arc Testnet (5042002) or Base Sepolia (84532)");
         }
     }
 
