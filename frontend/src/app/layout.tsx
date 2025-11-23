@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
-  title: "Vault Dashboard",
-  description: "Explore and allocate capital to DeFi vaults",
+  title: "OneTx",
+  description: "Swift protocol for defi",
 };
 
 export default function RootLayout({
