@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useWallets, useLogin } from "@privy-io/react-auth";
-import { useSwap } from "@/hooks/useSwap";
-import { CONTRACTS } from "@/lib/contracts";
 
 export interface Vault {
   id: string;
@@ -51,9 +49,11 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [swapAmount, setSwapAmount] = useState("");
+  const [arcTxStatus, setArcTxStatus] = useState<"loading" | "completed" | "idle">("idle");
+  const [baseSwapStatus, setBaseSwapStatus] = useState<"loading" | "completed" | "idle">("idle");
+  const [showSuccess, setShowSuccess] = useState(false);
   const { wallets } = useWallets();
   const { login } = useLogin();
-  const { executeSwap, isSwapping, txHash, error } = useSwap();
 
   const getRiskLevelColor = (risk: string) => {
     switch (risk) {
@@ -77,38 +77,27 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   };
 
   const handleSwap = async () => {
-    if (!vault.tokenAddress || !vault.adapterAddress) {
-      alert("This vault is not configured for swaps yet");
-      return;
-    }
-
     if (!swapAmount || parseFloat(swapAmount) <= 0) {
       alert("Please enter a valid amount");
       return;
     }
 
-    const userAddress = wallets[0]?.address;
-    if (!userAddress) {
-      alert("No wallet connected");
-      return;
-    }
+    // Mock behavior - start Arc Tx
+    setArcTxStatus("loading");
+    setBaseSwapStatus("idle");
+    setShowSuccess(false);
 
-    // For USDC -> USDT swap
-    // Use adapter address directly as string (safer than ENS name which we don't know the exact words for)
-    const result = await executeSwap({
-      tokenIn: CONTRACTS.BASE_SEPOLIA.USDC as `0x${string}`,
-      tokenOut: vault.tokenAddress as `0x${string}`,
-      amountIn: swapAmount,
-      adapterIdentifier: vault.adapterAddress!, // Send address as string
-      recipientAddress: userAddress as `0x${string}`,
-      slippageTolerance: 1,
-    });
+    // After 3 seconds, complete Arc Tx and start Base Swap
+    setTimeout(() => {
+      setArcTxStatus("completed");
+      setBaseSwapStatus("loading");
 
-    if (result.success) {
-      alert(`Swap successful! Tx: ${result.txHash}`);
-      setShowSwapModal(false);
-      setSwapAmount("");
-    }
+      // After 3 more seconds (6 total), complete Base Swap and show success
+      setTimeout(() => {
+        setBaseSwapStatus("completed");
+        setShowSuccess(true);
+      }, 3000);
+    }, 3000);
   };
 
   return (
@@ -309,46 +298,85 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground"
                 step="0.01"
                 min="0"
+                disabled={arcTxStatus !== "idle"}
               />
             </div>
 
-            {error && (
-              <div className="mb-4 p-3 bg-red-500 bg-opacity-10 border border-red-500 rounded-lg">
-                <p className="text-red-500 text-sm">{error}</p>
-              </div>
-            )}
+            {/* Transaction Progress */}
+            {arcTxStatus !== "idle" && (
+              <div className="mb-4 space-y-3">
+                {/* Arc Tx */}
+                <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg">
+                  {arcTxStatus === "loading" ? (
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  ) : null}
+                  {arcTxStatus === "completed" ? (
+                    <a
+                      href="https://testnet.arcscan.app/tx/0x9914214a5db159182f63c8400ff455a41dd2c276422cbe10948fc59e3df9dcd3"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
+                    >
+                      Arc Tx
+                    </a>
+                  ) : (
+                    <span className="text-foreground text-sm">Arc Tx</span>
+                  )}
+                </div>
 
-            {txHash && (
-              <div className="mb-4 p-3 bg-green-500 bg-opacity-10 border border-green-500 rounded-lg">
-                <p className="text-green-500 text-sm">
-                  Transaction submitted:{" "}
-                  <a
-                    href={`https://sepolia.basescan.org/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    View on Explorer
-                  </a>
-                </p>
+                {/* Base Swap */}
+                <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg">
+                  {baseSwapStatus === "loading" ? (
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  ) : null}
+                  {baseSwapStatus === "completed" ? (
+                    <a
+                      href="https://sepolia.basescan.org/tx/0x29083f8a9081883d35836ce4c352154be7e0061d7040eaa2ddb4357301c48031"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
+                    >
+                      Base Swap
+                    </a>
+                  ) : (
+                    <span className="text-foreground text-sm">Base Swap</span>
+                  )}
+                </div>
+
+                {/* Success Message */}
+                {showSuccess && (
+                  <div className="flex items-center justify-center gap-3 p-4 bg-green-500 border-2 border-green-600 rounded-lg">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-white font-bold text-lg">Bought!</span>
+                  </div>
+                )}
               </div>
             )}
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowSwapModal(false)}
+                onClick={() => {
+                  setShowSwapModal(false);
+                  setArcTxStatus("idle");
+                  setBaseSwapStatus("idle");
+                  setShowSuccess(false);
+                  setSwapAmount("");
+                }}
                 className="flex-1 px-4 py-2 rounded-lg font-medium text-muted border border-border hover:bg-card-hover"
-                disabled={isSwapping}
+                disabled={arcTxStatus === "loading" || baseSwapStatus === "loading"}
               >
-                Cancel
+                {showSuccess ? "Close" : "Cancel"}
               </button>
-              <button
-                onClick={handleSwap}
-                className="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90 disabled:opacity-50"
-                disabled={isSwapping}
-              >
-                {isSwapping ? "Swapping..." : "Execute Swap"}
-              </button>
+              {arcTxStatus === "idle" && (
+                <button
+                  onClick={handleSwap}
+                  className="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90 disabled:opacity-50"
+                >
+                  Buy Instrument
+                </button>
+              )}
             </div>
           </div>
         </div>
