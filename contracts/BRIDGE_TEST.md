@@ -11,7 +11,7 @@ Test script to bridge USDC from Arc Testnet to Base Sepolia using Circle's CCTP.
 PRIVATE_KEY=your_private_key_here
 ```
 
-2. **Get USDC on Arc Testnet**: You need at least 10 USDC
+2. **Get USDC on Arc Testnet**: You need at least 1 USDC
    - USDC Address: `0x3600000000000000000000000000000000000000`
    - Arc Faucet: https://faucet.arc.gelato.digital
 
@@ -29,7 +29,7 @@ forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
 
 **What this does:**
 - Approves the bridge to spend your USDC
-- Burns 10 USDC on Arc Testnet via CCTP
+- Burns 1 USDC on Arc Testnet via CCTP
 - Emits a `MessageSent` event with the message hash
 - Shows you the transaction details
 
@@ -40,10 +40,10 @@ Step 1: Bridging USDC from Arc to Base Sepolia
 =================================================
 Sender: 0x...
 Bridge Contract: 0x2Bd7115Db8FFdcB077C8a146401aBd4A5E982903
-Amount: 10 USDC
+Amount: 1 USDC
 
 Current USDC balance: 100 USDC
-Approved bridge to spend 10 USDC
+Approved bridge to spend 1 USDC
 
 =================================================
 Bridge Transaction Successful!
@@ -185,7 +185,7 @@ forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
 To change the bridge amount, edit `TestCCTPBridge.s.sol`:
 
 ```solidity
-uint256 constant BRIDGE_AMOUNT = 10_000000; // 10 USDC (6 decimals)
+uint256 constant BRIDGE_AMOUNT = 1_000000; // 1 USDC (6 decimals)
 ```
 
 ## Troubleshooting

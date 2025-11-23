@@ -32,7 +32,7 @@ contract TestCCTPBridge is Script {
     string constant ATTESTATION_API = "https://iris-api-sandbox.circle.com";
 
     // ============ Test Parameters ============
-    uint256 constant BRIDGE_AMOUNT = 10_000000; // 10 USDC (6 decimals)
+    uint256 constant BRIDGE_AMOUNT = 1_000000; // 1 USDC (6 decimals)
 
     /**
      * @notice Main entry point - routes to appropriate function based on chain
