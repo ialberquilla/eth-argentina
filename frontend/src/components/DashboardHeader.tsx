@@ -51,8 +51,12 @@ export const DashboardHeader = () => {
     <header className="mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Vault Dashboard</h1>
-          <p className="text-muted mt-1">Explore and allocate capital to DeFi vaults</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">
+            OneTx
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg font-light tracking-wide">
+            Swift protocol for defi
+          </p>
         </div>
         <div className="flex items-center gap-4">
           {authenticated ? (
