@@ -21,7 +21,7 @@ PRIVATE_KEY=your_private_key_here
 
 ```bash
 forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
-    --rpc-url https://rpc.arc.gelato.digital \
+    --rpc-url https://rpc.testnet.arc.network \
     --broadcast \
     --legacy \
     -vvv
@@ -77,7 +77,7 @@ Look at your Arc transaction on the explorer and find the `MessageSent` event. T
 
 **Or use cast:**
 ```bash
-cast tx <TX_HASH> --rpc-url https://rpc.arc.gelato.digital | grep -A 20 "MessageSent"
+cast tx <TX_HASH> --rpc-url https://rpc.testnet.arc.network | grep -A 20 "MessageSent"
 ```
 
 ### Step 3: Get Attestation from Circle
@@ -140,7 +140,7 @@ cast call 0x036CbD53842c5426634e7929541eC2318f3dCF7e \
 ```bash
 forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
     --sig "checkBalance()" \
-    --rpc-url https://rpc.arc.gelato.digital
+    --rpc-url https://rpc.testnet.arc.network
 ```
 
 **Base Sepolia:**
@@ -156,7 +156,7 @@ forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
 ```bash
 forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
     --sig "checkBridgeStatus()" \
-    --rpc-url https://rpc.arc.gelato.digital
+    --rpc-url https://rpc.testnet.arc.network
 ```
 
 **Base Bridge:**
@@ -168,7 +168,7 @@ forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
 
 ## Deployed Contracts
 
-### Arc Testnet (Chain ID: 23244)
+### Arc Testnet (Chain ID: 5042002)
 - **CCTP Bridge**: `0x2Bd7115Db8FFdcB077C8a146401aBd4A5E982903`
 - **USDC**: `0x3600000000000000000000000000000000000000`
 - **MessageTransmitter**: `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`
@@ -212,11 +212,11 @@ uint256 constant BRIDGE_AMOUNT = 1_000000; // 1 USDC (6 decimals)
 # 1. Check your balance
 forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
     --sig "checkBalance()" \
-    --rpc-url https://rpc.arc.gelato.digital
+    --rpc-url https://rpc.testnet.arc.network
 
 # 2. Bridge from Arc
 forge script script/TestCCTPBridge.s.sol:TestCCTPBridge \
-    --rpc-url https://rpc.arc.gelato.digital \
+    --rpc-url https://rpc.testnet.arc.network \
     --broadcast \
     --legacy \
     -vvv
