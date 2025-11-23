@@ -170,7 +170,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
           </div>
         </div>
 
-        {/* Right: Expand Button and Allocate Capital */}
+        {/* Right: Expand Button and Buy */}
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -189,7 +189,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             onClick={handleAllocateCapital}
             className="px-6 py-2 rounded-lg font-medium text-white transition-all bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:opacity-90"
           >
-            Allocate Capital
+            Buy
           </button>
         </div>
       </div>
